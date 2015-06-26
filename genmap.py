@@ -23,7 +23,7 @@ class ResourceMap(list):
     def __str__(self):
         return '\n'.join([''.join([c for c in row]) for row in self])
 
-    def add_shape(self, duration):
+    def add_resource(self, duration):
 
         # Find first empty cell.
         x = y = 0
@@ -31,14 +31,31 @@ class ResourceMap(list):
             if self[x][y] == '-':
                 break
             x += 1
-            y += 1
+            if x > self.W:
+                x = 0
+                y += 1
 
+        # Determine target area.
         target_area = int(self.area * (duration / self.sum_of_durations))
         assert target_area >= 16
 
+        # Get a list of candidate shapes.
         candidates = self._get_candidate_shapes(target_area)
+
+        # Weight the list of candidate shapes.
+        pass
+
+        # Pick a shape and draw it!
         shape = random.choice(candidates)
-        print(shape)
+        self._draw_shape_at(shape, x, y)
+
+
+    def _draw_shape_at(self, shape, x, y):
+        w, h = shape
+        for i in range(x, x+w+1):
+            for j in range(y, y+h+1):
+                self[i][j] = '#'
+
 
     def _get_candidate_shapes(self, target_area):
         lo = 4
@@ -52,9 +69,9 @@ class ResourceMap(list):
                 lo += 1
 
         candidates = []
-        for i in range(lo, hi+1):
-            for j in range(lo, hi+1):
-                candidates.append((i,j))
+        for w in range(lo, hi+1):
+            for h in range(lo, hi+1):
+                candidates.append((w, h))
 
         return candidates
 
@@ -68,7 +85,6 @@ if __name__ == '__main__':
     durations = list(fake_data())
     resource_map = ResourceMap(canvas_size=512, sum_of_durations=sum(durations))
     for duration in durations:
-        resource_map.add_shape(duration)
-    import pdb; pdb.set_trace()
-
+        resource_map.add_resource(duration)
+        break
     print(resource_map)
