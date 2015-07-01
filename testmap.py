@@ -44,3 +44,10 @@ def test_map_can_draw_an_empty_canvas_with_different_alleys():
 def test_ffec_finds_first_empty_cell():
     m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10, alley_width=2)
     assert m.find_first_empty_cell() == (2, 2)
+
+
+# determine_target_area - dta
+
+def test_dta_determines_target_area():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10, alley_width=2)
+    assert m.find_first_empty_cell() == (2, 2)

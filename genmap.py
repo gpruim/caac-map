@@ -53,6 +53,11 @@ class MagnitudeMap(list):
                 y += 1
         return x, y
 
+    def determine_target_area(self, magnitude):
+        target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
+        min_area = self.alley_width * 2
+        assert target_area >= min_area
+        return target_area
 
     def add(self, magnitude):
 
@@ -60,8 +65,7 @@ class MagnitudeMap(list):
         x, y = self.find_first_empty_cell()
 
         # Determine target area.
-        target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
-        assert target_area >= 16
+        target_area = self.determine_target_area(magnitude)
 
         # Try to find a nice fit. If we can't make it work, introduce some jitter.
         shapes = self._get_snapped_shapes(x, y, target_area)
