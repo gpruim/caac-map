@@ -5,12 +5,12 @@ import math
 import random
 
 
-class ResourceMap(list):
+class MagnitudeMap(list):
 
-    def __init__(self, canvas_size, sum_of_durations):
+    def __init__(self, canvas_size, sum_of_magnitudes):
         self.H = self.W = canvas_size
         self.area = self.H * self.W
-        self.sum_of_durations = sum_of_durations
+        self.sum_of_magnitudes = sum_of_magnitudes
 
         # Build the base map. It's surrounded by alleys, so it's effectively
         # 1-indexed.
@@ -23,7 +23,7 @@ class ResourceMap(list):
     def __str__(self):
         return '\n'.join([''.join([c for c in row]) for row in self])
 
-    def add_resource(self, duration):
+    def add(self, magnitude):
 
         # Find first empty cell.
         x = y = 0
@@ -36,7 +36,7 @@ class ResourceMap(list):
                 y += 1
 
         # Determine target area.
-        target_area = int(self.area * (duration / self.sum_of_durations))
+        target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
         assert target_area >= 16
 
         # Get a list of candidate shapes.
@@ -82,9 +82,9 @@ def fake_data():
 
 
 if __name__ == '__main__':
-    durations = list(fake_data())
-    resource_map = ResourceMap(canvas_size=512, sum_of_durations=sum(durations))
-    for duration in durations:
-        resource_map.add_resource(duration)
+    magnitudes = list(fake_data())
+    magnitude_map = MagnitudeMap(canvas_size=512, sum_of_magnitudes=sum(magnitudes))
+    for magnitude in magnitudes:
+        magnitude_map.add(magnitude)
         break
-    print(resource_map)
+    print(magnitude_map)
