@@ -53,7 +53,9 @@ class MagnitudeMap(list):
         assert target_area >= 16
 
         # Get a list of candidate shapes.
-        candidates = self._get_candidate_shapes(target_area)
+        candidates = self._get_candidate_shapes(x, y, target_area)
+        if not candidates:
+            return
 
         # Weight the list of candidate shapes.
         pass
@@ -97,7 +99,7 @@ class MagnitudeMap(list):
                 draw_alley(x,y)
 
 
-    def _get_candidate_shapes(self, target_area):
+    def _get_candidate_shapes(self, x, y, target_area):
         lo = 4
         hi = None
 
@@ -111,9 +113,22 @@ class MagnitudeMap(list):
         candidates = []
         for w in range(lo, hi+1):
             for h in range(lo, hi+1):
+
+                if self._not_enough_room(x, y, w, h):
+                    continue
+
                 candidates.append((w, h))
 
         return candidates
+
+
+    def _not_enough_room(self, x, y, w, h):
+        try:
+            if self[x+w][y+h] != C:
+                return True
+        except IndexError:
+            return True
+        return False
 
 
 def fake_data():
@@ -124,6 +139,6 @@ def fake_data():
 if __name__ == '__main__':
     magnitudes = list(fake_data())
     magnitude_map = MagnitudeMap(canvas_size=(512, 512), sum_of_magnitudes=sum(magnitudes))
-    for magnitude in magnitudes[:3]:
+    for magnitude in magnitudes:
         magnitude_map.add(magnitude)
     print(magnitude_map)
