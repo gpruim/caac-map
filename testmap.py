@@ -3,23 +3,19 @@ from pytest import raises
 
 
 def test_map_can_draw_an_empty_canvas():
-    m = genmap.MagnitudeMap(canvas_size=(32, 8), sum_of_magnitudes=0)
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=0)
     assert unicode(m) == """\
-------------------------------------
-------------------------------------
---                                --
---                                --
---                                --
---                                --
---                                --
---                                --
---                                --
---                                --
-------------------------------------
-------------------------------------"""
+----------------
+----------------
+--            --
+--            --
+--            --
+--            --
+----------------
+----------------"""
 
 
-def test_map_can_draw_an_empty_canvas_with_different_alleys():
+def test_map_can_draw_an_empty_canvas_with_different_size():
     m = genmap.MagnitudeMap(canvas_size=(32, 8), alley_width=4)
     assert unicode(m) == """\
 ----------------------------------------
@@ -65,3 +61,10 @@ def test_dta_enforces_lower_bound():
     m = genmap.MagnitudeMap(canvas_size=(10, 10), sum_of_magnitudes=20)
     with raises(genmap.TargetAreaTooSmall):
         m.determine_target_area(3)
+
+
+# get_right_bounds - grb
+
+def test_grb_gets_right_bounds():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10)
+    assert m.get_right_bounds(2, 2) == [13]

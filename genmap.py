@@ -70,7 +70,7 @@ class MagnitudeMap(list):
         target_area = self.determine_target_area(magnitude)
 
         # Try to find a nice fit. If we can't make it work, introduce some jitter.
-        shapes = self._get_snapped_shapes(x, y, target_area)
+        shapes = self.get_snapped_shapes(x, y, target_area)
         if not shapes:
             shapes = self._get_unsnapped_shapes(x, y, target_area)
 
@@ -125,10 +125,10 @@ class MagnitudeMap(list):
                 draw_alley(x,y)
 
 
-    def _get_snapped_shapes(self, x, y, target_area):
+    def get_snapped_shapes(self, x, y, target_area):
 
-        right_bounds = self._get_right_bounds(x, y)
-        bottom_bounds = self._get_bottom_bounds(x, y)
+        right_bounds = self.get_right_bounds(x, y)
+        bottom_bounds = self.get_bottom_bounds(x, y)
 
         shapes = []
         for right_bound in right_bounds:
@@ -144,18 +144,18 @@ class MagnitudeMap(list):
         return shapes
 
 
-    def _get_right_bounds(self, x, y):
+    def get_right_bounds(self, x, y):
         right_bounds = []
-        while x < self.W + self.alley_width:
+        while x < self.alley_width + self.W:
             if self[x+1][y] == self.A:
                 right_bounds.append(x)
-            elif self[x+1][y-self.alley_width-1] == self.A:
-                right_bounds.append(x)
+            #elif self[x+1][y-self.alley_width-1] == self.A:
+            #    right_bounds.append(x)
             x += 1
         return right_bounds
 
 
-    def _get_bottom_bounds(self, x, y):
+    def get_bottom_bounds(self, x, y):
         bottom_bounds = []
         while y < self.H + self.alley_width:
             if self[x][y+1] == self.A:
