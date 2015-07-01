@@ -5,28 +5,34 @@ import math
 import random
 
 
-A = '\u2591'    # Alley
-B = '\u2593'    # Block/Building
-C = ' '         # Canvas
+class NoPossibleShapes(Exception):
+    pass
 
 
 class MagnitudeMap(list):
 
-    def __init__(self, canvas_size, sum_of_magnitudes):
+    A = '-' # Alley
+    B = '#' # Block/Building
+    C = ' ' # Canvas
+
+    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=4):
         self.W, self.H = canvas_size
         self.area = self.W * self.H
         self.sum_of_magnitudes = sum_of_magnitudes
+        self.A, self.B, self.C = chars
+        self.alley_width = alley_width
 
-        # Build the base map. It's surrounded by alleys, which are four units wide.
-        padded = lambda col: [A,A,A,A] + col + [A,A,A,A]
+        # Build the base map. It's surrounded by alleys.
+        alley = lambda: [self.A]*self.alley_width
+        padded = lambda col: alley() + col + alley()
         col = lambda char: self.append(padded([char for y in range(self.H)]))
-        for x in range(4):      col(A)
-        for x in range(self.W): col(C)
-        for x in range(4):      col(A)
+        for x in range(self.alley_width):   col(self.A)
+        for x in range(self.W):             col(self.C)
+        for x in range(self.alley_width):   col(self.A)
 
     def __unicode__(self):
         out = []
-        alleys = 8
+        alleys = self.alley_width * 2
         for y in range(self.H + alleys):
             for x in range(self.W + alleys):
                 out.append(self[x][y])
@@ -41,7 +47,7 @@ class MagnitudeMap(list):
         # Find first empty cell.
         x = y = 0
         while 1:
-            if self[x][y] == C:
+            if self[x][y] == self.C:
                 break
             x += 1
             if x > self.W:
@@ -52,16 +58,19 @@ class MagnitudeMap(list):
         target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
         assert target_area >= 16
 
-        # Get a list of candidate shapes.
-        candidates = self._get_candidate_shapes(x, y, target_area)
-        if not candidates:
-            return
+        # Try to find a nice fit. If we can't make it work, introduce some jitter.
+        shapes = self._get_snapped_shapes(x, y, target_area)
+        if not shapes:
+            shapes = self._get_unsnapped_shapes(x, y, target_area)
 
         # Weight the list of candidate shapes.
         pass
 
+        if not shapes:
+            raise NoPossibleShapes()
+
         # Pick a shape and draw it!
-        shape = random.choice(candidates)
+        shape = random.choice(shapes)
         self._draw_shape_at(shape, x, y)
 
 
@@ -69,7 +78,13 @@ class MagnitudeMap(list):
         w, h = shape
         for x_ in range(x, x+w+1):
             for y_ in range(y, y+h+1):
-                self[x_][y_] = B
+                try:
+                    self[x_][y_] = self.B
+                except IndexError:
+                    print(shape, x, y)
+                    print(x_, y_, len(self), len(self[y_]))
+                    print(self)
+                    raise
 
         self._draw_alleys_around_shape(w, h, x, y)
 
@@ -79,28 +94,69 @@ class MagnitudeMap(list):
         top, bottom = y, y+h+1
 
         def draw_alley(x,y):
-            assert self[x][y] in (C, A)
-            self[x][y] = A
+            assert self[x][y] in (self.C, self.A)
+            self[x][y] = self.A
 
-        for x in range(right, right+4):
-            for y in range(top-4, bottom+4):
+        for x in range(right, right + self.alley_width):
+            for y in range(top - self.alley_width, bottom + self.alley_width):
                 draw_alley(x,y)
 
-        for x in range(left-4, left):
-            for y in range(top-4, bottom+4):
-                draw_alley(x,y)
-
-        for x in range(left, right):
-            for y in range(top-4, top):
+        for x in range(left- self.alley_width, left):
+            for y in range(top - self.alley_width, bottom + self.alley_width):
                 draw_alley(x,y)
 
         for x in range(left, right):
-            for y in range(bottom, bottom+4):
+            for y in range(top - self.alley_width, top):
+                draw_alley(x,y)
+
+        for x in range(left, right):
+            for y in range(bottom, bottom + self.alley_width):
                 draw_alley(x,y)
 
 
-    def _get_candidate_shapes(self, x, y, target_area):
-        lo = 4
+    def _get_snapped_shapes(self, x, y, target_area):
+
+        right_bounds = self._get_right_bounds(x, y)
+        bottom_bounds = self._get_bottom_bounds(x, y)
+
+        shapes = []
+        for right_bound in right_bounds:
+            for bottom_bound in bottom_bounds:
+                w = right_bound - x
+                h = bottom_bound - y
+                candidate_area = w * h
+                delta = abs(target_area - candidate_area)
+                threshold = target_area * 0.8
+                if delta < threshold:
+                    shape = (right_bound, bottom_bound)
+                    shapes.append(shape)
+        return shapes
+
+
+    def _get_right_bounds(self, x, y):
+        right_bounds = []
+        while x < self.W + self.alley_width:
+            if self[x+1][y] == self.A:
+                right_bounds.append(x)
+            elif self[x+1][y-self.alley_width-1] == self.A:
+                right_bounds.append(x)
+            x += 1
+        return right_bounds
+
+
+    def _get_bottom_bounds(self, x, y):
+        bottom_bounds = []
+        while y < self.H + self.alley_width:
+            if self[x][y+1] == self.A:
+                bottom_bounds.append(y)
+            elif self[x-self.alley_width-1][y+1] == self.A:
+                bottom_bounds.append(y)
+            y += 1
+        return bottom_bounds
+
+
+    def _get_unsnapped_shapes(self, x, y, target_area):
+        lo = self.alley_width
         hi = None
 
         while 1:
@@ -124,7 +180,7 @@ class MagnitudeMap(list):
 
     def _not_enough_room(self, x, y, w, h):
         try:
-            if self[x+w][y+h] != C:
+            if self[x+w][y+h] != self.C:
                 return True
         except IndexError:
             return True
@@ -138,7 +194,10 @@ def fake_data():
 
 if __name__ == '__main__':
     magnitudes = list(fake_data())
-    magnitude_map = MagnitudeMap(canvas_size=(512, 512), sum_of_magnitudes=sum(magnitudes))
+    magnitude_map = MagnitudeMap( canvas_size=(512, 512)
+                                , sum_of_magnitudes=sum(magnitudes)
+                                , chars='\u2591\u2593 '
+                                 )
     for magnitude in magnitudes:
         magnitude_map.add(magnitude)
     print(magnitude_map)
