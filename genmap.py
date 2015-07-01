@@ -73,8 +73,6 @@ class MagnitudeMap(list):
 
         # Try to find a nice fit. If we can't make it work, introduce some jitter.
         shapes = self.get_snapped_shapes(x, y, target_area)
-        if not shapes:
-            shapes = self._get_unsnapped_shapes(x, y, target_area)
 
         # Weight the list of candidate shapes.
         pass
