@@ -114,3 +114,32 @@ def test_dsa_draws_shape_at():
 --############--
 ----------------
 ----------------"""
+
+def test_dsa_draws_shape_that_doesnt_use_whole_canvas():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    m.draw_shape_at((6, 4), 8, 2)
+    assert unicode(m) == """\
+----------------
+----------------
+--    --######--
+--    --######--
+--    --######--
+--    --######--
+----------------
+----------------"""
+
+
+# add
+
+def test_add_adds():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10)
+    m.add(10)
+    assert unicode(m) == """\
+----------------
+----------------
+--############--
+--############--
+--############--
+--############--
+----------------
+----------------"""
