@@ -15,7 +15,7 @@ class MagnitudeMap(list):
     B = '#' # Block/Building
     C = ' ' # Canvas
 
-    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=4):
+    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2):
         self.W, self.H = canvas_size
         self.area = self.W * self.H
         self.sum_of_magnitudes = sum_of_magnitudes
