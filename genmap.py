@@ -26,7 +26,7 @@ class MagnitudeMap(list):
         self.area_threshold = area_threshold
 
         # Build the base map. It's surrounded by alleys.
-        alley = lambda: [self.A]*self.alley_width
+        alley = lambda: [self.A] * self.alley_width
         padded = lambda col: alley() + col + alley()
         col = lambda char: self.append(padded([char for y in range(self.H)]))
         for x in range(self.alley_width):   col(self.A)
@@ -45,6 +45,7 @@ class MagnitudeMap(list):
     def __str__(self):
         return unicode(self).encode('UTF-8')
 
+
     def find_first_empty_cell(self):
         x = y = 0
         while 1:
@@ -56,12 +57,14 @@ class MagnitudeMap(list):
                 y += 1
         return x, y
 
+
     def determine_target_area(self, magnitude):
         target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
         min_area = self.block_min ** 2
         if target_area < min_area:
             raise TargetAreaTooSmall()
         return target_area
+
 
     def add(self, magnitude):
 
