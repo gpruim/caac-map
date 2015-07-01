@@ -42,9 +42,7 @@ class MagnitudeMap(list):
     def __str__(self):
         return unicode(self).encode('UTF-8')
 
-    def add(self, magnitude):
-
-        # Find first empty cell.
+    def find_first_empty_cell(self):
         x = y = 0
         while 1:
             if self[x][y] == self.C:
@@ -53,6 +51,13 @@ class MagnitudeMap(list):
             if x > self.W:
                 x = 0
                 y += 1
+        return x, y
+
+
+    def add(self, magnitude):
+
+        # Find first empty cell.
+        x, y = self.find_first_empty_cell()
 
         # Determine target area.
         target_area = int(self.area * (magnitude / self.sum_of_magnitudes))

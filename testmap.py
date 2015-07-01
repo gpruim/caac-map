@@ -37,3 +37,10 @@ def test_map_can_draw_an_empty_canvas_with_different_alleys():
 --                                --
 ------------------------------------
 ------------------------------------"""
+
+
+# find_first_empty_cell - ffec
+
+def test_ffec_finds_first_empty_cell():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10, alley_width=2)
+    assert m.find_first_empty_cell() == (2, 2)
