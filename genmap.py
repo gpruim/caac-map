@@ -25,11 +25,11 @@ class MagnitudeMap(list):
             self.insert(0, top_or_bottom())
             self.append(top_or_bottom())
 
-    def __str__(self):
-        return '\n'.join([''.join([c for c in row]) for row in self]).encode('UTF-8')
-
     def __unicode__(self):
-        return str(self).decode('UTF-8')
+        return '\n'.join([''.join(row) for row in self])
+
+    def __str__(self):
+        return unicode(self).encode('UTF-8')
 
     def add(self, magnitude):
 
@@ -60,8 +60,8 @@ class MagnitudeMap(list):
 
     def _draw_shape_at(self, shape, x, y):
         w, h = shape
-        for i in range(x, x+w+1):
-            for j in range(y, y+h+1):
+        for i in range(y, y+h+1):
+            for j in range(x, x+w+1):
                 self[i][j] = B
 
         self._draw_alleys_around_shape(w, h, x, y)
@@ -75,20 +75,20 @@ class MagnitudeMap(list):
             assert self[i][j] in (C, A)
             self[i][j] = A
 
-        for i in range(right, right+4):
-            for j in range(top-4, bottom+4):
+        for i in range(top-4, bottom+4):
+            for j in range(right, right+4):
                 draw_alley(i,j)
 
-        for i in range(left-4, left):
-            for j in range(top-4, bottom+4):
+        for i in range(top-4, bottom+4):
+            for j in range(left-4, left):
                 draw_alley(i,j)
 
-        for i in range(left, right):
-            for j in range(top-4, top):
+        for i in range(top-4, top):
+            for j in range(left, right):
                 draw_alley(i,j)
 
-        for i in range(left, right):
-            for j in range(bottom, bottom+4):
+        for i in range(bottom, bottom+4):
+            for j in range(left, right):
                 draw_alley(i,j)
 
 
