@@ -39,7 +39,7 @@ def test_map_can_draw_an_empty_canvas_with_different_size():
 # find_first_empty_cell - ffec
 
 def test_ffec_finds_first_empty_cell():
-    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10)
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
     assert m.find_first_empty_cell() == (2, 2)
 
 
@@ -66,5 +66,19 @@ def test_dta_enforces_lower_bound():
 # get_right_bounds - grb
 
 def test_grb_gets_right_bounds():
-    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10)
-    assert m.get_right_bounds(2, 2) == [13]
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    assert m.get_right_bounds(2, 2) == [14]
+
+
+# get_bottom_bounds - gbb
+
+def test_gbb_gets_bottom_bounds():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    assert m.get_bottom_bounds(2, 2) == [6]
+
+
+# get_snapped_shapes - gss
+
+def test_gss_gets_snapped_shapes():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    assert m.get_snapped_shapes(2, 2, 48) == [(12, 4)]

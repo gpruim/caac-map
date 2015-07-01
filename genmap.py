@@ -15,13 +15,15 @@ class MagnitudeMap(list):
     B = '#' # Block/Building
     C = ' ' # Canvas
 
-    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4):
+    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4,
+            area_threshold=1):
         self.W, self.H = canvas_size
         self.area = self.W * self.H
         self.sum_of_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
         self.alley_width = alley_width
         self.block_min = block_min
+        self.area_threshold = area_threshold
 
         # Build the base map. It's surrounded by alleys.
         alley = lambda: [self.A]*self.alley_width
@@ -137,9 +139,9 @@ class MagnitudeMap(list):
                 h = bottom_bound - y
                 candidate_area = w * h
                 delta = abs(target_area - candidate_area)
-                threshold = target_area * 0.8
+                threshold = target_area * self.area_threshold
                 if delta < threshold:
-                    shape = (right_bound, bottom_bound)
+                    shape = (w, h)
                     shapes.append(shape)
         return shapes
 
@@ -147,22 +149,18 @@ class MagnitudeMap(list):
     def get_right_bounds(self, x, y):
         right_bounds = []
         while x < self.alley_width + self.W:
-            if self[x+1][y] == self.A:
-                right_bounds.append(x)
-            #elif self[x+1][y-self.alley_width-1] == self.A:
-            #    right_bounds.append(x)
             x += 1
+            if self[x][y] == self.A:
+                right_bounds.append(x)
         return right_bounds
 
 
     def get_bottom_bounds(self, x, y):
         bottom_bounds = []
         while y < self.H + self.alley_width:
-            if self[x][y+1] == self.A:
-                bottom_bounds.append(y)
-            elif self[x-self.alley_width-1][y+1] == self.A:
-                bottom_bounds.append(y)
             y += 1
+            if self[x][y] == self.A:
+                bottom_bounds.append(y)
         return bottom_bounds
 
 
