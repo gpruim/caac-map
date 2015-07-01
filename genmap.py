@@ -84,13 +84,13 @@ class MagnitudeMap(list):
 
         # Pick a shape and draw it!
         shape = random.choice(shapes)
-        self._draw_shape_at(shape, x, y)
+        self.draw_shape_at(shape, x, y)
 
 
-    def _draw_shape_at(self, shape, x, y):
+    def draw_shape_at(self, shape, x, y):
         w, h = shape
-        for x_ in range(x, x+w+1):
-            for y_ in range(y, y+h+1):
+        for x_ in range(x, x+w):
+            for y_ in range(y, y+h):
                 try:
                     self[x_][y_] = self.B
                 except IndexError:
@@ -99,12 +99,13 @@ class MagnitudeMap(list):
                     print(self)
                     raise
 
-        self._draw_alleys_around_shape(w, h, x, y)
+        self.draw_alleys_around_shape(shape, x, y)
 
 
-    def _draw_alleys_around_shape(self, w, h, x, y):
-        left, right = x, x+w+1
-        top, bottom = y, y+h+1
+    def draw_alleys_around_shape(self, shape, x, y):
+        w, h = shape
+        left, right = x, x+w
+        top, bottom = y, y+h
 
         def draw_alley(x,y):
             assert self[x][y] in (self.C, self.A)
@@ -114,7 +115,7 @@ class MagnitudeMap(list):
             for y in range(top - self.alley_width, bottom + self.alley_width):
                 draw_alley(x,y)
 
-        for x in range(left- self.alley_width, left):
+        for x in range(left - self.alley_width, left):
             for y in range(top - self.alley_width, bottom + self.alley_width):
                 draw_alley(x,y)
 

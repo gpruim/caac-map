@@ -82,3 +82,35 @@ def test_gbb_gets_bottom_bounds():
 def test_gss_gets_snapped_shapes():
     m = genmap.MagnitudeMap(canvas_size=(12, 4))
     assert m.get_snapped_shapes(2, 2, 48) == [(12, 4)]
+
+
+# draw_alleys_around_shape - daas
+
+def test_daas_draws_alleys_around_shape():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    m.draw_alleys_around_shape((5, 1), 2, 2)
+    assert unicode(m) == """\
+----------------
+----------------
+--     --     --
+---------     --
+---------     --
+--            --
+----------------
+----------------"""
+
+
+# draw_shape_at - dsa
+
+def test_dsa_draws_shape_at():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    m.draw_shape_at((12, 4), 2, 2)
+    assert unicode(m) == """\
+----------------
+----------------
+--############--
+--############--
+--############--
+--############--
+----------------
+----------------"""
