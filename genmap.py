@@ -13,20 +13,25 @@ C = ' '         # Canvas
 class MagnitudeMap(list):
 
     def __init__(self, canvas_size, sum_of_magnitudes):
-        self.H = self.W = canvas_size
-        self.area = self.H * self.W
+        self.W, self.H = canvas_size
+        self.area = self.W * self.H
         self.sum_of_magnitudes = sum_of_magnitudes
 
         # Build the base map. It's surrounded by alleys, which are four units wide.
-        padded = lambda row: [A,A,A,A] + row + [A,A,A,A]
-        top_or_bottom = lambda: padded([A for i in range(self.W)])
-        self.extend([padded([C for i in range(self.W)]) for j in range(self.H)])
-        for i in range(4):
-            self.insert(0, top_or_bottom())
-            self.append(top_or_bottom())
+        padded = lambda col: [A,A,A,A] + col + [A,A,A,A]
+        col = lambda char: self.append(padded([char for y in range(self.H)]))
+        for x in range(4):      col(A)
+        for x in range(self.W): col(C)
+        for x in range(4):      col(A)
 
     def __unicode__(self):
-        return '\n'.join([''.join(row) for row in self])
+        out = []
+        alleys = 8
+        for y in range(self.H + alleys):
+            for x in range(self.W + alleys):
+                out.append(self[x][y])
+            out.append('\n')
+        return ''.join(out[:-1])
 
     def __str__(self):
         return unicode(self).encode('UTF-8')
@@ -36,7 +41,7 @@ class MagnitudeMap(list):
         # Find first empty cell.
         x = y = 0
         while 1:
-            if self[y][x] == C:
+            if self[x][y] == C:
                 break
             x += 1
             if x > self.W:
@@ -60,9 +65,9 @@ class MagnitudeMap(list):
 
     def _draw_shape_at(self, shape, x, y):
         w, h = shape
-        for i in range(y, y+h+1):
-            for j in range(x, x+w+1):
-                self[i][j] = B
+        for x_ in range(x, x+w+1):
+            for y_ in range(y, y+h+1):
+                self[x_][y_] = B
 
         self._draw_alleys_around_shape(w, h, x, y)
 
@@ -71,25 +76,25 @@ class MagnitudeMap(list):
         left, right = x, x+w+1
         top, bottom = y, y+h+1
 
-        def draw_alley(i,j):
-            assert self[i][j] in (C, A)
-            self[i][j] = A
+        def draw_alley(x,y):
+            assert self[x][y] in (C, A)
+            self[x][y] = A
 
-        for i in range(top-4, bottom+4):
-            for j in range(right, right+4):
-                draw_alley(i,j)
+        for x in range(right, right+4):
+            for y in range(top-4, bottom+4):
+                draw_alley(x,y)
 
-        for i in range(top-4, bottom+4):
-            for j in range(left-4, left):
-                draw_alley(i,j)
+        for x in range(left-4, left):
+            for y in range(top-4, bottom+4):
+                draw_alley(x,y)
 
-        for i in range(top-4, top):
-            for j in range(left, right):
-                draw_alley(i,j)
+        for x in range(left, right):
+            for y in range(top-4, top):
+                draw_alley(x,y)
 
-        for i in range(bottom, bottom+4):
-            for j in range(left, right):
-                draw_alley(i,j)
+        for x in range(left, right):
+            for y in range(bottom, bottom+4):
+                draw_alley(x,y)
 
 
     def _get_candidate_shapes(self, target_area):
@@ -118,7 +123,7 @@ def fake_data():
 
 if __name__ == '__main__':
     magnitudes = list(fake_data())
-    magnitude_map = MagnitudeMap(canvas_size=512, sum_of_magnitudes=sum(magnitudes))
-    for magnitude in magnitudes[:2]:
+    magnitude_map = MagnitudeMap(canvas_size=(512, 512), sum_of_magnitudes=sum(magnitudes))
+    for magnitude in magnitudes[:3]:
         magnitude_map.add(magnitude)
     print(magnitude_map)
