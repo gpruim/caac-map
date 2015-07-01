@@ -83,6 +83,10 @@ def test_gss_gets_snapped_shapes():
     m = genmap.MagnitudeMap(canvas_size=(12, 4))
     assert m.get_snapped_shapes(2, 2, 48) == [(12, 4)]
 
+def test_gss_gets_snapped_shape_for_half_area():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4))
+    assert m.get_snapped_shapes(2, 2, 24) == [(6, 4), (12, 1)]
+
 
 # draw_alleys_around_shape - daas
 
@@ -141,5 +145,27 @@ def test_add_adds():
 --############--
 --############--
 --############--
+----------------
+----------------"""
+
+def test_add_adds_a_half_magnitude():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10)
+    m.add(5)
+    assert unicode(m) == """\
+----------------
+----------------
+--#####--     --
+--#####--     --
+--#####--     --
+--#####--     --
+----------------
+----------------"""
+    assert unicode(m) == """\
+----------------
+----------------
+--############--
+----------------
+----------------
+--            --
 ----------------
 ----------------"""
