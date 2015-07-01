@@ -36,7 +36,7 @@ class MagnitudeMap(list):
         # Find first empty cell.
         x = y = 0
         while 1:
-            if self[x][y] == C:
+            if self[y][x] == C:
                 break
             x += 1
             if x > self.W:
@@ -119,7 +119,6 @@ def fake_data():
 if __name__ == '__main__':
     magnitudes = list(fake_data())
     magnitude_map = MagnitudeMap(canvas_size=512, sum_of_magnitudes=sum(magnitudes))
-    for magnitude in magnitudes:
+    for magnitude in magnitudes[:2]:
         magnitude_map.add(magnitude)
-        break
     print(magnitude_map)
