@@ -5,8 +5,8 @@ import math
 import random
 
 
-class NoPossibleShapes(Exception):
-    pass
+class NoPossibleShapes(Exception): pass
+class TargetAreaTooSmall(Exception): pass
 
 
 class MagnitudeMap(list):
@@ -15,12 +15,13 @@ class MagnitudeMap(list):
     B = '#' # Block/Building
     C = ' ' # Canvas
 
-    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2):
+    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4):
         self.W, self.H = canvas_size
         self.area = self.W * self.H
         self.sum_of_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
         self.alley_width = alley_width
+        self.block_min = block_min
 
         # Build the base map. It's surrounded by alleys.
         alley = lambda: [self.A]*self.alley_width
@@ -55,8 +56,9 @@ class MagnitudeMap(list):
 
     def determine_target_area(self, magnitude):
         target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
-        min_area = self.alley_width * 2
-        assert target_area >= min_area
+        min_area = self.block_min ** 2
+        if target_area < min_area:
+            raise TargetAreaTooSmall()
         return target_area
 
     def add(self, magnitude):

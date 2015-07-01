@@ -1,4 +1,5 @@
 import genmap
+from pytest import raises
 
 
 def test_map_can_draw_an_empty_canvas():
@@ -59,3 +60,8 @@ def test_dta_prorates_based_on_sum_of_magnitudes():
 def test_dta_varies_with_canvas_size():
     m = genmap.MagnitudeMap(canvas_size=(12, 12), sum_of_magnitudes=20)
     assert m.determine_target_area(10) == 72
+
+def test_dta_enforces_lower_bound():
+    m = genmap.MagnitudeMap(canvas_size=(10, 10), sum_of_magnitudes=20)
+    with raises(genmap.TargetAreaTooSmall):
+        m.determine_target_area(3)
