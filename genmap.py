@@ -187,7 +187,7 @@ class MagnitudeMap(list):
         right_bounds = []
         while x < self.alley_width + self.W:
             x += 1
-            if self[x][y] == self.A:
+            if self[x + self.half_alley][y] == self.A:
                 right_bounds.append(x)
         return right_bounds
 
@@ -196,7 +196,7 @@ class MagnitudeMap(list):
         bottom_bounds = []
         while y < self.H + self.alley_width:
             y += 1
-            if self[x][y] == self.A:
+            if self[x][y + self.half_alley] == self.A:
                 bottom_bounds.append(y)
         return bottom_bounds
 
