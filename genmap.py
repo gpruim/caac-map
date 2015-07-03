@@ -110,33 +110,33 @@ class MagnitudeMap(list):
                     print(self)
                     raise
 
-        self.draw_alleys_around_shape(shape, x, y)
+        self.draw_half_alleys_around_shape(shape, x, y)
 
 
-    def draw_alleys_around_shape(self, shape, x, y):
+    def draw_half_alleys_around_shape(self, shape, x, y):
         w, h = shape
         left, right = x, x+w
         top, bottom = y, y+h
 
-        def draw_alley(x,y):
+        def place_alley(x,y):
             assert self[x][y] in (self.C, self.A)
             self[x][y] = self.A
 
-        for x in range(right, right + self.alley_width):
-            for y in range(top - self.alley_width, bottom + self.alley_width):
-                draw_alley(x,y)
+        for x in range(right, right + self.half_alley):
+            for y in range(top - self.half_alley, bottom + self.half_alley):
+                place_alley(x,y)
 
-        for x in range(left - self.alley_width, left):
-            for y in range(top - self.alley_width, bottom + self.alley_width):
-                draw_alley(x,y)
-
-        for x in range(left, right):
-            for y in range(top - self.alley_width, top):
-                draw_alley(x,y)
+        for x in range(left - self.half_alley, left):
+            for y in range(top - self.half_alley, bottom + self.half_alley):
+                place_alley(x,y)
 
         for x in range(left, right):
-            for y in range(bottom, bottom + self.alley_width):
-                draw_alley(x,y)
+            for y in range(top - self.half_alley, top):
+                place_alley(x,y)
+
+        for x in range(left, right):
+            for y in range(bottom, bottom + self.half_alley):
+                place_alley(x,y)
 
 
     def get_snapped_shapes(self, x, y, target_area):

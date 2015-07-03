@@ -105,19 +105,19 @@ def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
     assert m.get_snapped_shapes(2, 2, 24) == [(12, 2), (3, 8)]
 
 
-# draw_alleys_around_shape - daas
+# draw_half_alleys_around_shape - dhaas
 
-def test_daas_draws_alleys_around_shape():
+def test_dhaas_draws_half_alleys_around_shape():
     m = genmap.MagnitudeMap(canvas_size=(12, 4))
-    m.draw_alleys_around_shape((5, 1), 2, 2)
+    m.draw_half_alleys_around_shape((5, 1), 2, 2)
     assert unicode(m) == """\
 ----------------
-----------------
---     --     --
----------     --
----------     --
---            --
-----------------
+--------       -
+--     -       -
+--------       -
+-              -
+-              -
+-              -
 ----------------"""
 
 
