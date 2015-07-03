@@ -21,7 +21,7 @@ class MagnitudeMap(list):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
-        self.area = (self.W + alley_width) * (self.H + alley_width)
+        self.area = (self.W - alley_width) * (self.H - alley_width)
         self.sum_of_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
         self.half_alley = alley_width // 2
@@ -30,20 +30,21 @@ class MagnitudeMap(list):
 
         # Build the base map. It's surrounded by alleys.
 
+        innerW = self.W - (self.alley_width * 2)
+        innerH = self.H - (self.alley_width * 2)
         half_alley = lambda P=self.A: [P] * self.half_alley
         padded = lambda col, P: half_alley() + half_alley(P) + col + half_alley(P) + half_alley()
-        col = lambda char, P: self.append(padded([char for y in range(self.H)], P))
+        col = lambda char, P: self.append(padded([char for y in range(innerH)], P))
         for x in range(self.half_alley):    col(self.A, self.A)
         for x in range(self.half_alley):    col(self.C, self.C)
-        for x in range(self.W):             col(self.C, self.C)
+        for x in range(innerW):             col(self.C, self.C)
         for x in range(self.half_alley):    col(self.C, self.C)
         for x in range(self.half_alley):    col(self.A, self.A)
 
     def __unicode__(self):
         out = []
-        alleys = self.alley_width * 2
-        for y in range(self.H + alleys):
-            for x in range(self.W + alleys):
+        for y in range(self.H):
+            for x in range(self.W):
                 out.append(self[x][y])
             out.append('\n')
         return ''.join(out[:-1])
@@ -58,7 +59,7 @@ class MagnitudeMap(list):
             if self[x][y] == self.C:
                 break
             x += 1
-            if x > self.W:
+            if x == self.W:
                 x = 0
                 y += 1
         return x, y
@@ -187,7 +188,7 @@ class MagnitudeMap(list):
 
     def get_right_bounds(self, x, y):
         right_bounds = []
-        while x < self.alley_width + self.W + self.half_alley:
+        while x < self.W - self.half_alley:
             x += 1
             if self[x][y] == self.A:
                 right_bounds.append(x)
@@ -196,7 +197,7 @@ class MagnitudeMap(list):
 
     def get_bottom_bounds(self, x, y):
         bottom_bounds = []
-        while y < self.alley_width + self.H + self.half_alley:
+        while y < self.H - self.half_alley:
             y += 1
             if self[x][y] == self.A:
                 bottom_bounds.append(y)
