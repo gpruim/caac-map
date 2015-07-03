@@ -21,8 +21,8 @@ class MagnitudeMap(list):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
-        self.area = (self.W - alley_width) * (self.H - alley_width)
-        self.sum_of_magnitudes = sum_of_magnitudes
+        self.remaining_area = (self.W - alley_width) * (self.H - alley_width)
+        self.remaining_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
         self.half_alley = alley_width // 2
         self.block_min = block_min
@@ -66,7 +66,7 @@ class MagnitudeMap(list):
 
 
     def determine_target_area(self, magnitude):
-        target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
+        target_area = int(self.remaining_area * (magnitude / self.remaining_magnitudes))
         min_area = (self.block_min + self.alley_width) ** 2
         if target_area < min_area:
             raise TargetAreaTooSmall()
@@ -97,6 +97,9 @@ class MagnitudeMap(list):
             shape = random.choice(shapes)
         self.draw_shape_at(shape, x, y)
 
+        # Decrement remaining_magnitudes.
+        self.remaining_magnitudes -= magnitude
+
 
     def draw_shape_at(self, shape, x, y):
         w, h = [dimension - self.alley_width for dimension in shape]
@@ -106,6 +109,7 @@ class MagnitudeMap(list):
             for y_ in range(y, y+h):
                 try:
                     self[x_][y_] = self.B
+                    self.remaining_area -= 1
                 except IndexError:
                     print(shape, x, y)
                     print(x_, y_, len(self), len(self[y_]))
@@ -123,6 +127,7 @@ class MagnitudeMap(list):
         def place_alley_tile(x, y):
             assert self[x][y] in (self.C, self.A)
             self[x][y] = self.A
+            self.remaining_area -= 1
 
         for x in range(right, right + self.half_alley):
             for y in range(top - self.half_alley, bottom + self.half_alley):
