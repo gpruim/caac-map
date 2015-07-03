@@ -7,6 +7,7 @@ import random
 
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
+class UnevenAlleys(Exception): pass
 
 
 class MagnitudeMap(list):
@@ -21,6 +22,8 @@ class MagnitudeMap(list):
         self.area = self.W * self.H
         self.sum_of_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
+        if alley_width % 2 == 1:
+            raise UnevenAlleys()
         self.alley_width = alley_width
         self.block_min = block_min
         self.area_threshold = area_threshold

@@ -36,6 +36,13 @@ def test_map_can_draw_an_empty_canvas_with_different_size():
 ----------------------------------------"""
 
 
+def test_map_requires_alleys_to_be_even_widths():
+    genmap.MagnitudeMap(canvas_size=(12, 4), alley_width=2)
+    with raises(genmap.UnevenAlleys):
+        genmap.MagnitudeMap(canvas_size=(12, 4), alley_width=3)
+    genmap.MagnitudeMap(canvas_size=(12, 4), alley_width=4)
+
+
 # find_first_empty_cell - ffec
 
 def test_ffec_finds_first_empty_cell():
