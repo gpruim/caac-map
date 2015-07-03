@@ -66,7 +66,7 @@ class MagnitudeMap(list):
         return target_area
 
 
-    def add(self, magnitude):
+    def add(self, magnitude, shape_choice=None):
 
         # Find first empty cell.
         x, y = self.find_first_empty_cell()
@@ -84,7 +84,10 @@ class MagnitudeMap(list):
             raise NoPossibleShapes()
 
         # Pick a shape and draw it!
-        shape = random.choice(shapes)
+        if shape_choice is not None:
+            shape = shapes[shape_choice]
+        else:
+            shape = random.choice(shapes)
         self.draw_shape_at(shape, x, y)
 
 

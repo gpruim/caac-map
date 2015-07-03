@@ -87,6 +87,12 @@ def test_gss_gets_snapped_shape_for_half_area():
     m = genmap.MagnitudeMap(canvas_size=(12, 4), block_min=1)
     assert m.get_snapped_shapes(2, 2, 24) == [(12, 2), (6, 4)]
 
+def test_gss_gets_snapped_shape_respects_block_min():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), block_min=2)
+    assert m.get_snapped_shapes(2, 2, 24) == [(12, 2), (6, 4)]
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), block_min=3)
+    assert m.get_snapped_shapes(2, 2, 24) == [(6, 4)]
+
 def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
     m = genmap.MagnitudeMap(canvas_size=(12, 8), block_min=1)
     assert m.get_snapped_shapes(2, 2, 24) == [(12, 2), (3, 8)]
@@ -153,23 +159,27 @@ def test_add_adds():
 ----------------"""
 
 def test_add_adds_a_half_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10)
-    m.add(5)
-    assert unicode(m) == """\
-----------------
-----------------
---#####--     --
---#####--     --
---#####--     --
---#####--     --
-----------------
-----------------"""
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10, block_min=2)
+    m.add(5, shape_choice=0)
     assert unicode(m) == """\
 ----------------
 ----------------
 --############--
+--############--
 ----------------
 ----------------
---            --
+----------------
+----------------"""
+
+def test_add_adds_the_other_half_magnitude():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=10, block_min=2)
+    m.add(5, shape_choice=1)
+    assert unicode(m) == """\
+----------------
+----------------
+--######--    --
+--######--    --
+--######--    --
+--######--    --
 ----------------
 ----------------"""
