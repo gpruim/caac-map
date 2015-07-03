@@ -101,6 +101,12 @@ class MagnitudeMap(list):
         self.remaining_magnitudes -= magnitude
 
 
+    def place_tile(self, tile, x, y):
+        assert self[x][y] == self.C
+        self[x][y] = tile
+        self.remaining_area -= 1
+
+
     def draw_shape_at(self, shape, x, y):
         w, h = [dimension - self.alley_width for dimension in shape]
         x = x + self.half_alley
@@ -108,8 +114,7 @@ class MagnitudeMap(list):
         for x_ in range(x, x+w):
             for y_ in range(y, y+h):
                 try:
-                    self[x_][y_] = self.B
-                    self.remaining_area -= 1
+                    self.place_tile(self.B, x_, y_)
                 except IndexError:
                     print(shape, x, y)
                     print(x_, y_, len(self), len(self[y_]))
@@ -125,9 +130,8 @@ class MagnitudeMap(list):
         top, bottom = y, y+h
 
         def place_alley_tile(x, y):
-            assert self[x][y] in (self.C, self.A)
-            self[x][y] = self.A
-            self.remaining_area -= 1
+            if self[x][y] != self.A:
+                self.place_tile(self.A, x, y)
 
         for x in range(right, right + self.half_alley):
             for y in range(top - self.half_alley, bottom + self.half_alley):
