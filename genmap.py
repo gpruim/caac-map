@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import math
 import random
 
 
@@ -83,6 +82,8 @@ class MagnitudeMap(list):
 
         # Try to find a nice fit. If we can't make it work, introduce some jitter.
         shapes = self.get_snapped_shapes(x, y, target_area)
+        if not shapes:
+            shapes = self.get_unsnapped_shapes(x, y, target_area)
 
         # Weight the list of candidate shapes.
         pass
@@ -237,36 +238,31 @@ class MagnitudeMap(list):
         return bottom_bounds
 
 
-    def _get_unsnapped_shapes(self, x, y, target_area):
-        lo = self.alley_width
+    def get_unsnapped_shapes(self, x, y, target_area):
+        lo = self.shape_min
         hi = None
 
         while 1:
-            hi = int(math.floor(target_area / lo))
+            hi = target_area // lo
             if lo / hi >= 0.2:
                 break  # maintain a certain minimum aspect ratio
             else:
                 lo += 1
 
-        candidates = []
+        unsnapped = []
+
+        def enough_room(w, h):
+            try:
+                return self[x+w][y+h] in (self.C, self.A)
+            except IndexError:
+                return False
+
         for w in range(lo, hi+1):
-            for h in range(lo, hi+1):
+            h = target_area // w
+            if enough_room(w, h):
+                unsnapped.append((w, h))
 
-                if self._not_enough_room(x, y, w, h):
-                    continue
-
-                candidates.append((w, h))
-
-        return candidates
-
-
-    def _not_enough_room(self, x, y, w, h):
-        try:
-            if self[x+w][y+h] != self.C:
-                return True
-        except IndexError:
-            return True
-        return False
+        return unsnapped
 
 
 def fake_data():

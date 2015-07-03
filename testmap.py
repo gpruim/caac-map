@@ -139,6 +139,17 @@ We want this:       Instead of this:
     """
 
 
+# get_unsnapped_shapes - gus
+
+def test_gus_gets_unsnapped_shapes():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8))
+    assert m.get_unsnapped_shapes(1, 1, 36) == [(6, 6)]
+
+def test_gus_gets_multiple_unsnapped_shapes():
+    m = genmap.MagnitudeMap(canvas_size=(16, 12))  # NB: bigger canvas
+    assert m.get_unsnapped_shapes(1, 1, 48) == [(6, 8), (7, 6), (8, 6)]
+
+
 # draw_half_alleys_around_shape - dhaas
 
 def test_dhaas_draws_half_alleys_around_shape():
