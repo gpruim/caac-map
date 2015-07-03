@@ -19,12 +19,11 @@ class MagnitudeMap(list):
     def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4,
             area_threshold=1):
         self.W, self.H = canvas_size
-        self.area = self.W * self.H
+        if alley_width % 2 == 1: raise UnevenAlleys()
+        self.alley_width = alley_width
+        self.area = (self.W + alley_width) * (self.H + alley_width)
         self.sum_of_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
-        if alley_width % 2 == 1:
-            raise UnevenAlleys()
-        self.alley_width = alley_width
         self.half_alley = alley_width // 2
         self.block_min = block_min
         self.area_threshold = area_threshold
@@ -62,12 +61,12 @@ class MagnitudeMap(list):
             if x > self.W:
                 x = 0
                 y += 1
-        return x + self.half_alley, y + self.half_alley
+        return x, y
 
 
     def determine_target_area(self, magnitude):
         target_area = int(self.area * (magnitude / self.sum_of_magnitudes))
-        min_area = self.block_min ** 2
+        min_area = (self.block_min + self.alley_width) ** 2
         if target_area < min_area:
             raise TargetAreaTooSmall()
         return target_area
@@ -99,7 +98,9 @@ class MagnitudeMap(list):
 
 
     def draw_shape_at(self, shape, x, y):
-        w, h = shape
+        w, h = [dimension - self.alley_width for dimension in shape]
+        x = x + self.half_alley
+        y = y + self.half_alley
         for x_ in range(x, x+w):
             for y_ in range(y, y+h):
                 try:
@@ -110,7 +111,7 @@ class MagnitudeMap(list):
                     print(self)
                     raise
 
-        self.draw_half_alleys_around_shape(shape, x, y)
+        self.draw_half_alleys_around_shape((w,h), x, y)
 
 
     def draw_half_alleys_around_shape(self, shape, x, y):
@@ -118,25 +119,25 @@ class MagnitudeMap(list):
         left, right = x, x+w
         top, bottom = y, y+h
 
-        def place_alley(x,y):
+        def place_alley_tile(x, y):
             assert self[x][y] in (self.C, self.A)
             self[x][y] = self.A
 
         for x in range(right, right + self.half_alley):
             for y in range(top - self.half_alley, bottom + self.half_alley):
-                place_alley(x,y)
+                place_alley_tile(x, y)
 
         for x in range(left - self.half_alley, left):
             for y in range(top - self.half_alley, bottom + self.half_alley):
-                place_alley(x,y)
+                place_alley_tile(x, y)
 
         for x in range(left, right):
             for y in range(top - self.half_alley, top):
-                place_alley(x,y)
+                place_alley_tile(x, y)
 
         for x in range(left, right):
             for y in range(bottom, bottom + self.half_alley):
-                place_alley(x,y)
+                place_alley_tile(x, y)
 
 
     def get_snapped_shapes(self, x, y, target_area):
@@ -183,20 +184,21 @@ class MagnitudeMap(list):
                 one_snappers.append((w,h))
         return one_snappers
 
+
     def get_right_bounds(self, x, y):
         right_bounds = []
-        while x < self.alley_width + self.W:
+        while x < self.alley_width + self.W + self.half_alley:
             x += 1
-            if self[x + self.half_alley][y] == self.A:
+            if self[x][y] == self.A:
                 right_bounds.append(x)
         return right_bounds
 
 
     def get_bottom_bounds(self, x, y):
         bottom_bounds = []
-        while y < self.H + self.alley_width:
+        while y < self.alley_width + self.H + self.half_alley:
             y += 1
-            if self[x][y + self.half_alley] == self.A:
+            if self[x][y] == self.A:
                 bottom_bounds.append(y)
         return bottom_bounds
 
