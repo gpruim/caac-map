@@ -130,23 +130,48 @@ class MagnitudeMap(list):
 
 
     def get_snapped_shapes(self, x, y, target_area):
+        """Return a list of shapes we can reasonably snap to.
+
+        We can snap in one or two directions. If we can snap in two directions,
+        then the return list will only have one item: the two-snapped shape. If
+        we can't snap in two directions but we can snap in one or the other
+        direction, then we return a list of all the possible shapes snapped in
+        either direction.
+
+        """
 
         right_bounds = self.get_right_bounds(x, y)
         bottom_bounds = self.get_bottom_bounds(x, y)
 
-        shapes = []
+        two_snappers = []
         for right_bound in right_bounds:
             for bottom_bound in bottom_bounds:
                 w = right_bound - x
                 h = bottom_bound - y
+                if w < self.block_min or h < self.block_min:
+                    continue
                 candidate_area = w * h
                 delta = abs(target_area - candidate_area)
-                threshold = target_area * self.area_threshold
-                if delta < threshold:
+                threshold = target_area - (target_area * self.area_threshold)
+                if delta <= threshold:
                     shape = (w, h)
-                    shapes.append(shape)
-        return shapes
+                    two_snappers.append(shape)
 
+        if two_snappers:
+            return two_snappers
+
+        one_snappers = []
+        for right_bound in right_bounds:
+            w = right_bound - x
+            h = target_area // w
+            if h >= self.block_min:
+                one_snappers.append((w,h))
+        for bottom_bound in bottom_bounds:
+            h = bottom_bound - y
+            w = target_area // h
+            if w >= self.block_min:
+                one_snappers.append((w,h))
+        return one_snappers
 
     def get_right_bounds(self, x, y):
         right_bounds = []

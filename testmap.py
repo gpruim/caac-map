@@ -84,8 +84,12 @@ def test_gss_gets_snapped_shapes():
     assert m.get_snapped_shapes(2, 2, 48) == [(12, 4)]
 
 def test_gss_gets_snapped_shape_for_half_area():
-    m = genmap.MagnitudeMap(canvas_size=(12, 4))
-    assert m.get_snapped_shapes(2, 2, 24) == [(6, 4), (12, 1)]
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), block_min=1)
+    assert m.get_snapped_shapes(2, 2, 24) == [(12, 2), (6, 4)]
+
+def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
+    m = genmap.MagnitudeMap(canvas_size=(12, 8), block_min=1)
+    assert m.get_snapped_shapes(2, 2, 24) == [(12, 2), (3, 8)]
 
 
 # draw_alleys_around_shape - daas
