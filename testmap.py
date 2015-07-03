@@ -183,3 +183,17 @@ def test_add_adds_the_other_half_magnitude():
 --######--    --
 ----------------
 ----------------"""
+
+def test_add_adds_a_second_magnitude():
+    m = genmap.MagnitudeMap(canvas_size=(12, 4), sum_of_magnitudes=12, block_min=2)
+    m.add(6, shape_choice=1)
+    m.add(4)
+    assert unicode(m) == """\
+----------------
+----------------
+--######--####--
+--######--####--
+--######--####--
+--######--####--
+----------------
+----------------"""
