@@ -252,3 +252,31 @@ def test_add_adds_magnitudes_with_different_ratios():
 --######--####--
 ----------------
 ----------------"""
+
+def test_add_exhibits_pinch_prevention():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m.add(9, shape_choice=0)
+    m.add(1)
+    assert unicode(m) == """\
+----------------
+----------------
+--############--
+----------------
+----------------
+--############--
+----------------
+----------------"""
+
+def test_add_exhibits_pinch_prevention_the_other_way():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m.add(9, shape_choice=1)
+    m.add(1)
+    assert unicode(m) == """\
+----------------
+----------------
+--#########--#--
+--#########--#--
+--#########--#--
+--#########--#--
+----------------
+----------------"""
