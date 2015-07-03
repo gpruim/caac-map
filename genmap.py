@@ -266,16 +266,20 @@ class MagnitudeMap(list):
 
 
 def fake_data():
-    for i in range(50):
-        yield 32 * random.randint(1, 10)
+    for i in range(10):
+        yield 2 * random.randint(1, 10)
 
 
 if __name__ == '__main__':
     magnitudes = list(fake_data())
-    magnitude_map = MagnitudeMap( canvas_size=(512, 512)
+    magnitude_map = MagnitudeMap( canvas_size=(64, 32)
                                 , sum_of_magnitudes=sum(magnitudes)
                                 , chars='\u2591\u2593 '
                                  )
-    for magnitude in magnitudes:
-        magnitude_map.add(magnitude)
+    try:
+        for magnitude in magnitudes:
+            magnitude_map.add(magnitude)
+    except:
+        open('dump.map', 'w+').write(str(magnitude_map))
+        raise
     print(magnitude_map)
