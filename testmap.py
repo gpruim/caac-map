@@ -95,11 +95,16 @@ def test_gss_gets_snapped_shape_for_half_area():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (7, 6)]
 
-def test_gss_gets_snapped_shape_respects_block_min():
+def test_gss_respects_block_min():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=3)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (7, 6)]
     m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=4)
     assert m.get_snapped_shapes(1, 1, 42) == [(7, 6)]
+
+def test_gss_respects_block_min_again():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10)
+    m.add(9)
+    assert m.get_snapped_shapes(1, 1, 84) == []
 
 def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
     m = genmap.MagnitudeMap(canvas_size=(16, 12), block_min=1)
@@ -206,7 +211,7 @@ def test_add_adds_a_second_magnitude():
 ----------------
 ----------------"""
 
-def test_add_magnitudes_with_different_ratios():
+def test_add_adds_magnitudes_with_different_ratios():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, block_min=2)
     m.add(4, shape_choice=1)
     m.add(3)
@@ -219,3 +224,18 @@ def test_add_magnitudes_with_different_ratios():
 --######--####--
 ----------------
 ----------------"""
+
+def test_add_raises_NoPossibleShapes_when_there_are_no_possible_shapes():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m.add(9, shape_choice=1)
+    assert unicode(m) == """\
+----------------
+-------------  -
+--##########-  -
+--##########-  -
+--##########-  -
+--##########-  -
+-------------  -
+----------------"""
+    with raises(genmap.NoPossibleShapes):
+        m.add(1)

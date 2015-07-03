@@ -25,7 +25,7 @@ class MagnitudeMap(list):
         self.remaining_magnitudes = sum_of_magnitudes
         self.A, self.B, self.C = chars
         self.half_alley = alley_width // 2
-        self.block_min = block_min
+        self.shape_min = block_min + alley_width
         self.area_threshold = area_threshold
 
         # Build the base map. It's surrounded by alleys.
@@ -67,7 +67,7 @@ class MagnitudeMap(list):
 
     def determine_target_area(self, magnitude):
         target_area = int(self.remaining_area * (magnitude / self.remaining_magnitudes))
-        min_area = (self.block_min + self.alley_width) ** 2
+        min_area = self.shape_min ** 2
         if target_area < min_area:
             raise TargetAreaTooSmall()
         return target_area
@@ -150,6 +150,10 @@ class MagnitudeMap(list):
                 place_alley_tile(x, y)
 
 
+    def big_enough(self, w, h):
+        return w >= self.shape_min and h >= self.shape_min
+
+
     def get_snapped_shapes(self, x, y, target_area):
         """Return a list of shapes we can reasonably snap to.
 
@@ -169,7 +173,7 @@ class MagnitudeMap(list):
             for bottom_bound in bottom_bounds:
                 w = right_bound - x
                 h = bottom_bound - y
-                if w < self.block_min or h < self.block_min:
+                if not self.big_enough(w, h):
                     continue
                 candidate_area = w * h
                 delta = abs(target_area - candidate_area)
@@ -185,13 +189,13 @@ class MagnitudeMap(list):
         for right_bound in right_bounds:
             w = right_bound - x
             h = target_area // w
-            if h >= self.block_min:
-                one_snappers.append((w,h))
+            if self.big_enough(w, h):
+                one_snappers.append((w, h))
         for bottom_bound in bottom_bounds:
             h = bottom_bound - y
             w = target_area // h
-            if w >= self.block_min:
-                one_snappers.append((w,h))
+            if self.big_enough(w, h):
+                one_snappers.append((w, h))
         return one_snappers
 
 
