@@ -150,10 +150,6 @@ class MagnitudeMap(list):
                 place_alley_tile(x, y)
 
 
-    def big_enough(self, w, h):
-        return w >= self.shape_min and h >= self.shape_min
-
-
     def get_snapped_shapes(self, x, y, target_area):
         """Return a list of shapes we can reasonably snap to.
 
@@ -168,12 +164,19 @@ class MagnitudeMap(list):
         right_bounds = self.get_right_bounds(x, y)
         bottom_bounds = self.get_bottom_bounds(x, y)
 
+
+        # Two-Snappers
+        # ============
+
         two_snappers = []
+
+        big_enough = lambda w, h: w >= self.shape_min and h >= self.shape_min
+
         for right_bound in right_bounds:
             for bottom_bound in bottom_bounds:
                 w = right_bound - x
                 h = bottom_bound - y
-                if not self.big_enough(w, h):
+                if not big_enough(w, h):
                     continue
                 candidate_area = w * h
                 delta = abs(target_area - candidate_area)
@@ -185,17 +188,34 @@ class MagnitudeMap(list):
         if two_snappers:
             return two_snappers
 
+
+        # One-Snappers
+        # ============
+
         one_snappers = []
+
+        def enough_canvas(x, y):
+            try:
+                return self[x][y] == self.C
+            except IndexError:
+                return False
+
         for right_bound in right_bounds:
             w = right_bound - x
             h = target_area // w
-            if self.big_enough(w, h):
+            while not enough_canvas(x, y + h-1 + self.shape_min):
+                h -= 1
+            if big_enough(w, h):
                 one_snappers.append((w, h))
+
         for bottom_bound in bottom_bounds:
             h = bottom_bound - y
             w = target_area // h
-            if self.big_enough(w, h):
+            while not enough_canvas(x + w-1 + self.shape_min, y):
+                w -= 1
+            if big_enough(w, h):
                 one_snappers.append((w, h))
+
         return one_snappers
 
 

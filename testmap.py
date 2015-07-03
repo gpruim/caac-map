@@ -96,19 +96,47 @@ def test_gss_gets_snapped_shape_for_half_area():
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (7, 6)]
 
 def test_gss_respects_block_min():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=3)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (7, 6)]
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=4)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=2)
     assert m.get_snapped_shapes(1, 1, 42) == [(7, 6)]
 
 def test_gss_respects_block_min_again():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10)
     m.add(9)
-    assert m.get_snapped_shapes(1, 1, 84) == []
+    assert m.get_snapped_shapes(1, 1, 84) == [(14, 6)]
 
 def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
     m = genmap.MagnitudeMap(canvas_size=(16, 12), block_min=1)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (4, 10)]
+
+def test_gss_exhibits_pinch_prevention():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    assert m.get_snapped_shapes(1, 1, 75) == [(14, 3), (11, 6)]
+
+    """
+
+We want this:       Instead of this:
+
+----------------    ----------------
+----------------    ----------------
+--############--    --############--
+----------------    --############--
+-              -    --############--
+-              -    ----------------
+-              -    -              -
+----------------    ----------------
+
+----------------    ----------------
+------------   -    -------------  -
+--#########-   -    --##########-  -
+--#########-   -    --##########-  -
+--#########-   -    --##########-  -
+--#########-   -    --##########-  -
+------------   -    -------------  -
+----------------    ----------------
+
+    """
 
 
 # draw_half_alleys_around_shape - dhaas
@@ -172,7 +200,7 @@ def test_add_adds():
 ----------------"""
 
 def test_add_adds_a_half_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=2)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
     m.add(5, shape_choice=0)
     assert unicode(m) == """\
 ----------------
@@ -185,7 +213,7 @@ def test_add_adds_a_half_magnitude():
 ----------------"""
 
 def test_add_adds_the_other_shape_for_a_half_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=2)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
     m.add(5, shape_choice=1)
     assert unicode(m) == """\
 ----------------
@@ -198,7 +226,7 @@ def test_add_adds_the_other_shape_for_a_half_magnitude():
 ----------------"""
 
 def test_add_adds_a_second_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=2)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
     m.add(5, shape_choice=1)
     m.add(5)
     assert unicode(m) == """\
@@ -212,7 +240,7 @@ def test_add_adds_a_second_magnitude():
 ----------------"""
 
 def test_add_adds_magnitudes_with_different_ratios():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, block_min=2)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, block_min=1)
     m.add(4, shape_choice=1)
     m.add(3)
     assert unicode(m) == """\
@@ -224,18 +252,3 @@ def test_add_adds_magnitudes_with_different_ratios():
 --######--####--
 ----------------
 ----------------"""
-
-def test_add_raises_NoPossibleShapes_when_there_are_no_possible_shapes():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(9, shape_choice=1)
-    assert unicode(m) == """\
-----------------
--------------  -
---##########-  -
---##########-  -
---##########-  -
---##########-  -
--------------  -
-----------------"""
-    with raises(genmap.NoPossibleShapes):
-        m.add(1)
