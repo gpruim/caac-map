@@ -25,16 +25,20 @@ class MagnitudeMap(list):
         if alley_width % 2 == 1:
             raise UnevenAlleys()
         self.alley_width = alley_width
+        self.half_alley = alley_width // 2
         self.block_min = block_min
         self.area_threshold = area_threshold
 
         # Build the base map. It's surrounded by alleys.
-        alley = lambda: [self.A] * self.alley_width
-        padded = lambda col: alley() + col + alley()
-        col = lambda char: self.append(padded([char for y in range(self.H)]))
-        for x in range(self.alley_width):   col(self.A)
-        for x in range(self.W):             col(self.C)
-        for x in range(self.alley_width):   col(self.A)
+
+        half_alley = lambda P=self.A: [P] * self.half_alley
+        padded = lambda col, P: half_alley() + half_alley(P) + col + half_alley(P) + half_alley()
+        col = lambda char, P: self.append(padded([char for y in range(self.H)], P))
+        for x in range(self.half_alley):    col(self.A, self.A)
+        for x in range(self.half_alley):    col(self.C, self.C)
+        for x in range(self.W):             col(self.C, self.C)
+        for x in range(self.half_alley):    col(self.C, self.C)
+        for x in range(self.half_alley):    col(self.A, self.A)
 
     def __unicode__(self):
         out = []
