@@ -43,11 +43,11 @@ def test_map_requires_alleys_to_be_even_widths():
     genmap.MagnitudeMap(canvas_size=(12, 4), alley_width=4)
 
 
-# find_first_empty_cell - ffec
+# find_starting_corner - fsc
 
-def test_ffec_finds_first_empty_cell():
+def test_fsc_finds_starting_corner():
     m = genmap.MagnitudeMap(canvas_size=(12, 4))
-    assert m.find_first_empty_cell() == (2, 2)
+    assert m.find_starting_corner() == (2, 2)
 
 
 # determine_target_area - dta

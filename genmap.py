@@ -53,7 +53,7 @@ class MagnitudeMap(list):
         return unicode(self).encode('UTF-8')
 
 
-    def find_first_empty_cell(self):
+    def find_starting_corner(self):
         x = y = 0
         while 1:
             if self[x][y] == self.C:
@@ -62,7 +62,7 @@ class MagnitudeMap(list):
             if x > self.W:
                 x = 0
                 y += 1
-        return x, y
+        return x + self.half_alley, y + self.half_alley
 
 
     def determine_target_area(self, magnitude):
@@ -76,7 +76,7 @@ class MagnitudeMap(list):
     def add(self, magnitude, shape_choice=None):
 
         # Find first empty cell.
-        x, y = self.find_first_empty_cell()
+        x, y = self.find_starting_corner()
 
         # Determine target area.
         target_area = self.determine_target_area(magnitude)
