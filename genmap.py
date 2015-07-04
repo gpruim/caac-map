@@ -195,7 +195,7 @@ class MagnitudeMap(list):
 
         one_snappers = []
 
-        def enough_canvas(x, y):
+        def enough_remaining(x, y):
             try:
                 return self[x][y] == self.C
             except IndexError:
@@ -204,7 +204,7 @@ class MagnitudeMap(list):
         for right_bound in right_bounds:
             w = right_bound - x
             h = target_area // w
-            while h and not enough_canvas(x, y + h-1 + self.shape_min):
+            while h and not enough_remaining(x, y + h-1 + self.shape_min):
                 h -= 1
             if big_enough(w, h):
                 one_snappers.append((w, h))
@@ -212,7 +212,7 @@ class MagnitudeMap(list):
         for bottom_bound in bottom_bounds:
             h = bottom_bound - y
             w = target_area // h
-            while w and not enough_canvas(x + w-1 + self.shape_min, y):
+            while w and not enough_remaining(x + w-1 + self.shape_min, y):
                 w -= 1
             if big_enough(w, h):
                 one_snappers.append((w, h))
