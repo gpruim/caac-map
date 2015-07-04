@@ -22,6 +22,7 @@ class MagnitudeMap(list):
         self.alley_width = alley_width
         self.remaining_area = (self.W - alley_width) * (self.H - alley_width)
         self.remaining_magnitudes = sum_of_magnitudes
+        self.chars = chars
         self.A, self.B, self.C = chars
         self.half_alley = alley_width // 2
         self.shape_min = block_min + alley_width
@@ -284,20 +285,44 @@ class MagnitudeMap(list):
 
 
 def fake_data():
-    for i in range(10):
-        yield 2 * random.randint(1, 10)
+    for i in range(20):
+        yield random.randint(1, 10)
 
 
 if __name__ == '__main__':
+    terminal = '\u2591\u2593 '
+    web = ( '<div class="tile A"></div>'
+          , '<div class="tile B"></div>'
+          , '<div class="tile C"></div>'
+           )
+
     magnitudes = list(fake_data())
-    magnitude_map = MagnitudeMap( canvas_size=(64, 32)
+    magnitude_map = MagnitudeMap( canvas_size=(256, 256)
                                 , sum_of_magnitudes=sum(magnitudes)
-                                , chars='\u2591\u2593 '
+                                , chars=web
                                  )
     try:
         for magnitude in magnitudes:
             magnitude_map.add(magnitude)
+    except AssertionError:
+        import sys
+        print("errored", file=sys.stderr)
+        pass
     except:
         open('dump.map', 'w+').write(str(magnitude_map))
         raise
+
+    if magnitude_map.chars == web:
+        print("""
+        <style>
+            div.wrapper { width: 1024px; height: 1024px; }
+            div.tile { width:4px; height: 4px; float: left; }
+            div.A { background: #FFFFFF; }
+            div.B { background: #0099FF; }
+            div.C { background: #EEEEEE; }
+        </style>
+        <div class="wrapper">
+        """)
     print(magnitude_map)
+    if magnitude_map.chars == web:
+        print("</div>")
