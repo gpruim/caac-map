@@ -77,6 +77,20 @@ def test_grb_gets_right_bounds():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
     assert m.get_right_bounds(1, 1) == [15]
 
+def test_grb_stops_at_first_right_bound():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8))
+    m.place_tile(m.A, 6, 1)
+    assert unicode(m) == """\
+----------------
+-     -        -
+-              -
+-              -
+-              -
+-              -
+-              -
+----------------"""
+    assert m.get_right_bounds(1, 1) == [6]
+
 
 # get_bottom_bounds - gbb
 
@@ -102,9 +116,9 @@ def test_gss_respects_block_min():
     assert m.get_snapped_shapes(1, 1, 42) == [(7, 6)]
 
 def test_gss_respects_block_min_again():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10)
-    m.add(9)
-    assert m.get_snapped_shapes(1, 1, 84) == [(14, 6)]
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m.add(9, shape_choice=1)
+    assert m.get_snapped_shapes(12, 1, 18) == [(3, 6)]
 
 def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
     m = genmap.MagnitudeMap(canvas_size=(16, 12), block_min=1)
