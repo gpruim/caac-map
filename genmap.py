@@ -16,7 +16,7 @@ class MagnitudeMap(list):
     C = ' ' # Canvas
 
     def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4,
-            area_threshold=1):
+            aspect_min=0.2, area_threshold=1):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -25,6 +25,7 @@ class MagnitudeMap(list):
         self.A, self.B, self.C = chars
         self.half_alley = alley_width // 2
         self.shape_min = block_min + alley_width
+        self.aspect_min = aspect_min
         self.area_threshold = area_threshold
 
         # Build the base map. It's surrounded by alleys.
@@ -151,6 +152,23 @@ class MagnitudeMap(list):
                 place_alley_tile(x, y)
 
 
+    def too_small(self, w, h):
+        return w < self.shape_min or h < self.shape_min
+
+    def too_skinny(self, w, h):
+        return min(w, h) / max(w, h) < self.aspect_min
+
+    def enough_room(self, w, h, x, y):
+        try:
+            return self[x+w][y+h] in (self.C, self.A)
+        except IndexError:
+            return False
+
+    def bad_shape_for(self, shape, x, y):
+        w, h = shape
+        return self.too_small(w, h) or self.too_skinny(w, h) or not self.enough_room(w, h, x, y)
+
+
     def get_snapped_shapes(self, x, y, target_area):
         """Return a list of shapes we can reasonably snap to.
 
@@ -171,13 +189,11 @@ class MagnitudeMap(list):
 
         two_snappers = []
 
-        big_enough = lambda w, h: w >= self.shape_min and h >= self.shape_min
-
         for right_bound in right_bounds:
             for bottom_bound in bottom_bounds:
                 w = right_bound - x
                 h = bottom_bound - y
-                if not big_enough(w, h):
+                if self.bad_shape_for((w, h), x, y):
                     continue
                 candidate_area = w * h
                 delta = abs(target_area - candidate_area)
@@ -206,7 +222,7 @@ class MagnitudeMap(list):
             h = target_area // w
             while h and not enough_remaining(x, y + h-1 + self.shape_min):
                 h -= 1
-            if big_enough(w, h):
+            if not self.bad_shape_for((w, h), x, y):
                 one_snappers.append((w, h))
 
         for bottom_bound in bottom_bounds:
@@ -214,7 +230,7 @@ class MagnitudeMap(list):
             w = target_area // h
             while w and not enough_remaining(x + w-1 + self.shape_min, y):
                 w -= 1
-            if big_enough(w, h):
+            if not self.bad_shape_for((w, h), x, y):
                 one_snappers.append((w, h))
 
         return one_snappers

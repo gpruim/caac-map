@@ -99,6 +99,50 @@ def test_gbb_gets_bottom_bounds():
     assert m.get_bottom_bounds(2, 2) == [7]
 
 
+# bad_shape_for - bsf
+
+def test_bsf_rejects_when_too_small():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8))
+
+    assert m.too_small(5, 5)
+    assert m.too_small(5, 6)
+    assert m.too_small(6, 5)
+    assert not m.too_small(6, 6)
+
+    assert m.bad_shape_for((5, 5), 1, 1)
+    assert m.bad_shape_for((5, 6), 1, 1)
+    assert m.bad_shape_for((6, 5), 1, 1)
+    assert not m.bad_shape_for((6, 6), 1, 1)
+
+def test_bsf_rejects_when_too_skinny():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1, aspect_min=0.3)
+    assert m.too_skinny(14, 3)
+    assert m.bad_shape_for((14, 3), 1, 1)
+
+def test_bsf_rejects_when_not_enough_room():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m.place_tile(m.B, 4, 6)
+    assert unicode(m) == """\
+----------------
+-              -
+-              -
+-              -
+-              -
+-              -
+-   #          -
+----------------"""
+
+    assert m.enough_room(3, 4, 1, 1)
+    assert not m.enough_room(3, 5, 1, 1)
+    assert not m.bad_shape_for((3, 4), 1, 1)
+    assert m.bad_shape_for((3, 5), 1, 1)
+
+    assert m.enough_room(14, 3, 1, 1)
+    assert not m.enough_room(15, 3, 1, 1)
+    assert not m.bad_shape_for((14, 3), 1, 1)
+    assert m.bad_shape_for((15, 3), 1, 1)
+
+
 # get_snapped_shapes - gss
 
 def test_gss_gets_snapped_shapes():
@@ -127,28 +171,27 @@ def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
 def test_gss_exhibits_pinch_prevention():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
     assert m.get_snapped_shapes(1, 1, 75) == [(14, 3), (11, 6)]
-
     """
 
-We want this:       Instead of this:
+    We want this:       Instead of this:
 
-----------------    ----------------
-----------------    ----------------
---############--    --############--
-----------------    --############--
--              -    --############--
--              -    ----------------
--              -    -              -
-----------------    ----------------
+    ----------------    ----------------
+    ----------------    ----------------
+    --############--    --############--
+    ----------------    --############--
+    -              -    --############--
+    -              -    ----------------
+    -              -    -              -
+    ----------------    ----------------
 
-----------------    ----------------
-------------   -    -------------  -
---#########-   -    --##########-  -
---#########-   -    --##########-  -
---#########-   -    --##########-  -
---#########-   -    --##########-  -
-------------   -    -------------  -
-----------------    ----------------
+    ----------------    ----------------
+    ------------   -    -------------  -
+    --#########-   -    --##########-  -
+    --#########-   -    --##########-  -
+    --#########-   -    --##########-  -
+    --#########-   -    --##########-  -
+    ------------   -    -------------  -
+    ----------------    ----------------
 
     """
 
