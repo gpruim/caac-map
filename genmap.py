@@ -239,21 +239,37 @@ class MagnitudeMap(list):
 
     def get_right_bounds(self, x, y):
         right_bounds = []
+        under_alley = 0
         while x < self.W - self.half_alley:
             x += 1
-            if self[x][y] == self.A:
+            if self[x][y] == self.A:                        # hard bound
                 right_bounds.append(x)
                 break
+            elif self[x][y-self.alley_width-1] == self.A:   # soft bound
+                under_alley += 1
+                if under_alley == self.half_alley + 1:
+                    right_bounds.append(x)
+                    under_alley = 0
+            else:
+                under_alley = 0
         return right_bounds
 
 
     def get_bottom_bounds(self, x, y):
         bottom_bounds = []
+        alongside_alley = 0
         while y < self.H - self.half_alley:
             y += 1
-            if self[x][y] == self.A:
+            if self[x][y] == self.A:                        # hard bound
                 bottom_bounds.append(y)
                 break
+            elif self[x-self.alley_width-1][y] == self.A:   # soft bound
+                alongside_alley += 1
+                if alongside_alley == self.half_alley + 1:
+                    bottom_bounds.append(y)
+                    alongside_alley = 0
+            else:
+                alongside_alley = 0
         return bottom_bounds
 
 
