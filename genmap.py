@@ -285,7 +285,7 @@ class MagnitudeMap(list):
 
 
 def fake_data():
-    for i in range(20):
+    for i in range(10):
         yield random.randint(1, 10)
 
 
@@ -297,9 +297,9 @@ if __name__ == '__main__':
            )
 
     magnitudes = list(fake_data())
-    magnitude_map = MagnitudeMap( canvas_size=(256, 256)
+    magnitude_map = MagnitudeMap( canvas_size=(64, 32)
                                 , sum_of_magnitudes=sum(magnitudes)
-                                , chars=web
+                                , chars=terminal
                                  )
     try:
         for magnitude in magnitudes:
