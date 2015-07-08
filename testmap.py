@@ -269,8 +269,8 @@ def test_bsf_rejects_when_not_enough_room():
 -              -
 -              -
 -              -
--              -
--   #          -
+-  ---         -
+-  -#-         -
 ----------------""")
 
     assert m.enough_room(3, 4, 1, 1)
