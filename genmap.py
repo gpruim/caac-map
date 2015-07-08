@@ -111,14 +111,10 @@ class MagnitudeMap(list):
         # Determine target area.
         target_area = self.determine_target_area(magnitude)
 
-        # Try to find a nice fit. If we can't make it work, introduce some jitter.
+        # Try to find a nice fit.
         shapes = self.get_snapped_shapes(x, y, target_area)
         if not shapes:
             shapes = self.get_unsnapped_shapes(x, y, target_area)
-
-        # Weight the list of candidate shapes.
-        pass
-
         if not shapes:
             raise NoPossibleShapes()
 
