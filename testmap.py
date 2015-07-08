@@ -336,6 +336,22 @@ def test_gss_exhibits_pinch_prevention():
 
     """
 
+def test_gss_will_two_snap_to_a_soft_and_hard_bound():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m.load("""\
+----------------
+-------        -
+--####-        -
+--####-        -
+-------        -
+-              -
+-              -
+----------------
+""")
+    assert m.find_starting_corner() == (7, 1)
+    assert m.get_bottom_bounds(7, 1) == [5, 7]
+    assert m.get_snapped_shapes(7, 1, 32) == [(8, 4)]
+
 
 # get_unsnapped_shapes - gus
 
