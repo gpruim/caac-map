@@ -245,39 +245,35 @@ class MagnitudeMap(list):
 
 
     def get_right_bounds(self, x, y):
-        right_bounds = []
-        under_alley = 0
-        while x < self.W - self.half_alley:
-            x += 1
-            if self[x][y] == self.A:                        # hard bound
-                right_bounds.append(x)
-                break
-            elif self[x][y-self.alley_width-1] == self.A:   # soft bound
-                under_alley += 1
-                if under_alley == self.half_alley + 1:
-                    right_bounds.append(x)
-                    under_alley = 0
-            else:
-                under_alley = 0
-        return right_bounds
-
+        return self._get_bounds(self.W, x, y, lambda a,b: self[a][b])
 
     def get_bottom_bounds(self, x, y):
-        bottom_bounds = []
-        alongside_alley = 0
-        while y < self.H - self.half_alley:
-            y += 1
-            if self[x][y] == self.A:                        # hard bound
-                bottom_bounds.append(y)
+        return self._get_bounds(self.H, y, x, lambda a,b: self[b][a])
+
+    def _get_bounds(self, D, a, b, tile):
+        bounds = set()
+        into_alley = 0
+        b_ = b - self.half_alley - 1
+        while a < D - self.half_alley:
+            a += 1
+
+            # hard bound
+            if tile(a, b) == self.A:
+                bounds.add(a)
                 break
-            elif self[x-self.alley_width-1][y] == self.A:   # soft bound
-                alongside_alley += 1
-                if alongside_alley == self.half_alley + 1:
-                    bottom_bounds.append(y)
-                    alongside_alley = 0
-            else:
-                alongside_alley = 0
-        return bottom_bounds
+
+            # soft bounds
+            if b_ < self.half_alley:
+                continue
+            c = tile(a, b_)
+            if c == self.A:
+                into_alley += 1
+                if into_alley == self.half_alley:
+                    bounds.add(a+1)
+            elif c == self.B:
+                into_alley = 0
+
+        return sorted(list(bounds))
 
 
     def get_unsnapped_shapes(self, x, y, target_area):

@@ -127,11 +127,24 @@ def test_grb_finds_soft_and_hard_bounds():
 ----------------
 --####--######--
 ----------------
-----------------
+-              -
 -              -
 -              -
 ----------------""")
-    assert m.get_right_bounds(1, 5) == [7, 15]
+    assert m.get_right_bounds(1, 4) == [7, 15]
+
+def test_grb_finds_soft_bound_with_some_empty_canvas():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m.load("""\
+----------------
+-------        -
+--####-        -
+-------        -
+-              -
+-              -
+-              -
+----------------""")
+    assert m.get_right_bounds(1, 4) == [7, 15]
 
 def test_grb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
     m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, block_min=1)
@@ -187,6 +200,19 @@ def test_gbb_finds_soft_and_hard_bounds():
 -------        -
 --####-        -
 -------        -
+----------------""")
+    assert m.get_bottom_bounds(7, 1) == [4, 7]
+
+def test_gbb_finds_soft_bound_with_some_empty_canvas():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m.load("""\
+----------------
+-------        -
+--####-        -
+-------        -
+-              -
+-              -
+-              -
 ----------------""")
     assert m.get_bottom_bounds(7, 1) == [4, 7]
 
