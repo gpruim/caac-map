@@ -33,7 +33,7 @@ class MagnitudeMap(list):
     C = ' ' # Canvas
 
     def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4,
-            aspect_min=0.2, area_threshold=1):
+            aspect_min=0.2):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -46,7 +46,7 @@ class MagnitudeMap(list):
         self.half_alley = alley_width // 2
         self.shape_min = block_min + alley_width
         self.aspect_min = aspect_min
-        self.area_threshold = area_threshold
+        self.area_threshold = 1  # lowered automatically as space shrinks
 
         # Build the base map. It's surrounded by alleys.
 
@@ -127,6 +127,9 @@ class MagnitudeMap(list):
 
         # Decrement remaining_magnitudes.
         self.remaining_magnitudes -= magnitude
+
+        # Recalculate area_threshold.
+        self.area_threshold = self.remaining_area / self.area
 
 
     def place_tile(self, tile, x, y):
