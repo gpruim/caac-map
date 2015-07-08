@@ -326,7 +326,7 @@ class MagnitudeMap(list):
 
 
 def fake_data(N):
-    return [random.randint(1, 10) for i in range(N)]
+    return [random.randint(1, 20) for i in range(N)]
 
 
 if __name__ == '__main__':
