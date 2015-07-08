@@ -9,7 +9,9 @@ for i in range(ntries):
     print("\rTries: {:,} / {:,} ({:.1f}%)".format(i, ntries, i / ntries), end='')
     stderr = StringIO()
     p = Popen('python genmap.py web'.split(), stdout=open('map.html', 'w+'), stderr=PIPE)
-    if 'Traceback' not in p.stderr.read():
-        if 'Remaining area: 0':
+    err = p.stderr.read()
+    if 'Traceback' not in err:
+        if 'Remaining area: 0' in err:
             print("\nFound one!")
+            print(err)
             break
