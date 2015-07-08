@@ -329,9 +329,8 @@ class MagnitudeMap(list):
         return unsnapped
 
 
-def fake_data(nmags):
-    for i in range(nmags):
-        yield random.randint(1, 10)
+def fake_data(N):
+    return [random.randint(1, 10) for i in range(N)]
 
 
 if __name__ == '__main__':
@@ -351,7 +350,7 @@ if __name__ == '__main__':
     H = args.get('H', 128)
     N = args.get('N', 40)
 
-    magnitudes = list(fake_data(N))
+    magnitudes = fake_data(N)
     m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=sum(magnitudes), chars=charset)
     try:
         i = 0
