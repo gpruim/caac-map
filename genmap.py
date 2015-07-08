@@ -307,11 +307,12 @@ class MagnitudeMap(list):
 
 
 def fake_data():
-    for i in range(10):
+    for i in range(40):
         yield random.randint(1, 10)
 
 
 if __name__ == '__main__':
+    import sys
     terminal = '\u2591\u2593 '
     web = ( '<div class="tile A"></div>'
           , '<div class="tile B"></div>'
@@ -319,22 +320,23 @@ if __name__ == '__main__':
            )
 
     magnitudes = list(fake_data())
-    magnitude_map = MagnitudeMap( canvas_size=(64, 32)
-                                , sum_of_magnitudes=sum(magnitudes)
-                                , chars=terminal
-                                 )
+    m = MagnitudeMap(canvas_size=(128, 128), sum_of_magnitudes=sum(magnitudes), chars=web)
     try:
+        i = 0
+        N = len(magnitudes)
         for magnitude in magnitudes:
-            magnitude_map.add(magnitude)
-    except AssertionError:
-        import sys
-        print("errored", file=sys.stderr)
-        pass
+            i += 1
+            m.add(magnitude)
+    except NoPossibleShapes:
+        print("ran out of room", file=sys.stderr)
+        print(N - i, "remaining magnitudes summing to", m.remaining_magnitudes, file=sys.stderr)
+        print("remaining area:", m.remaining_area, file=sys.stderr)
     except:
-        open('dump.map', 'w+').write(str(magnitude_map))
+        print("errored", file=sys.stderr)
+        open('dump.map', 'w+').write(str(m))
         raise
 
-    if magnitude_map.chars == web:
+    if m.chars == web:
         print("""
         <style>
             div.wrapper { width: 1024px; height: 1024px; }
@@ -345,6 +347,5 @@ if __name__ == '__main__':
         </style>
         <div class="wrapper">
         """)
-    print(magnitude_map)
-    if magnitude_map.chars == web:
+    if m.chars == web:
         print("</div>")
