@@ -43,6 +43,36 @@ def test_map_requires_alleys_to_be_even_widths():
     genmap.MagnitudeMap(canvas_size=(16, 8), alley_width=4)
 
 
+def test_map_can_be_loaded_from_unicode():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8))
+    u = """\
+----------------
+-              -
+- ### # #   #  -
+-  #  # ## ##  -
+-  #  # # # #  -
+-  #  # #   #  -
+-              -
+----------------"""
+    m.load(u)
+    assert unicode(m) == u
+
+
+def test_load_checks_for_character_fitness():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8))
+    u = """\
+----------------
+-              -
+- ### # #   #  -
+-  #  # ## ##  -
+-  #  # # $ #  -
+-  #  # #   #  -
+-              -
+----------------"""
+    with raises(AssertionError):
+        m.load(u)
+
+
 # find_starting_corner - fsc
 
 def test_fsc_finds_starting_corner():
@@ -79,8 +109,7 @@ def test_grb_gets_right_bounds():
 
 def test_grb_stops_at_first_hard_bound():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
-    m.place_tile(m.A, 6, 1)
-    assert unicode(m) == """\
+    m.load("""\
 ----------------
 -     -        -
 -              -
@@ -88,21 +117,12 @@ def test_grb_stops_at_first_hard_bound():
 -              -
 -              -
 -              -
-----------------"""
+----------------""")
     assert m.get_right_bounds(1, 1) == [6]
 
 def test_grb_finds_soft_and_hard_bounds():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
-    for x in range(1, 15):
-        m.place_tile(m.A, x, 1)
-        m.place_tile(m.B, x, 2)
-        m.place_tile(m.A, x, 3)
-        m.place_tile(m.A, x, 4)
-    m[1][2] = m.A
-    m[6][2] = m.A
-    m[7][2] = m.A
-    m[14][2] = m.A
-    assert unicode(m) == """\
+    m.load("""\
 ----------------
 ----------------
 --####--######--
@@ -110,19 +130,12 @@ def test_grb_finds_soft_and_hard_bounds():
 ----------------
 -              -
 -              -
-----------------"""
+----------------""")
     assert m.get_right_bounds(1, 5) == [7, 15]
 
 def test_grb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
     m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, block_min=1)
-    for x in range(2, 22):
-        for y in range(2, 9):
-            m.place_tile(m.A, x, y)
-    for x in range(4, 10):
-        for y in range(4, 7):
-            m[x][y] = m.B
-            m[x+10][y] = m.B
-    assert unicode(m) == """\
+    m.load("""\
 ------------------------
 ------------------------
 ------------------------
@@ -140,7 +153,7 @@ def test_grb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
 --                    --
 --                    --
 ------------------------
-------------------------"""
+------------------------""")
     assert m.find_starting_corner() == (2, 9)
     assert m.get_right_bounds(2, 9) == [12, 22]
 
@@ -153,8 +166,7 @@ def test_gbb_gets_bottom_bounds():
 
 def test_gbb_stops_at_first_hard_bound():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
-    m.place_tile(m.A, 1, 4)
-    assert unicode(m) == """\
+    m.load("""\
 ----------------
 -              -
 -              -
@@ -162,18 +174,12 @@ def test_gbb_stops_at_first_hard_bound():
 --             -
 -              -
 -              -
-----------------"""
+----------------""")
     assert m.get_bottom_bounds(1, 1) == [4]
 
 def test_gbb_finds_soft_and_hard_bounds():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
-    for x in range(1, 7):
-        for y in range(1, 7):
-            m.place_tile(m.A, x, y)
-    for x in range(2, 6):
-        m[x][2] = m.B
-        m[x][5] = m.B
-    assert unicode(m) == """\
+    m.load("""\
 ----------------
 -------        -
 --####-        -
@@ -181,19 +187,12 @@ def test_gbb_finds_soft_and_hard_bounds():
 -------        -
 --####-        -
 -------        -
-----------------"""
+----------------""")
     assert m.get_bottom_bounds(7, 1) == [4, 7]
 
 def test_gbb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
     m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, block_min=1)
-    for x in range(2, 12):
-        for y in range(2, 16):
-            m.place_tile(m.A, x, y)
-    for x in range(4, 10):
-        for y in range(4, 7):
-            m[x][y] = m.B
-            m[x][y+7] = m.B
-    assert unicode(m) == """\
+    m.load("""\
 ------------------------
 ------------------------
 ------------          --
@@ -211,7 +210,7 @@ def test_gbb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
 ------------          --
 ------------          --
 ------------------------
-------------------------"""
+------------------------""")
     assert m.find_starting_corner() == (12, 2)
     assert m.get_bottom_bounds(12, 2) == [9, 16]
 
@@ -238,8 +237,7 @@ def test_bsf_rejects_when_too_skinny():
 
 def test_bsf_rejects_when_not_enough_room():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
-    m.place_tile(m.B, 4, 6)
-    assert unicode(m) == """\
+    m.load("""\
 ----------------
 -              -
 -              -
@@ -247,7 +245,7 @@ def test_bsf_rejects_when_not_enough_room():
 -              -
 -              -
 -   #          -
-----------------"""
+----------------""")
 
     assert m.enough_room(3, 4, 1, 1)
     assert not m.enough_room(3, 5, 1, 1)

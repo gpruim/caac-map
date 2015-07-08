@@ -54,6 +54,13 @@ class MagnitudeMap(list):
         return unicode(self).encode('UTF-8')
 
 
+    def load(self, u):
+        for y, row in enumerate(u.splitlines()):
+            for x, char in enumerate(row):
+                assert char in self.chars
+                self[x][y] = char
+
+
     def find_starting_corner(self):
         x = y = 0
         while 1:
