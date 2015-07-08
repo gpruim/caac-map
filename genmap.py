@@ -8,6 +8,23 @@ class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
 
+class TilePlacementError(Exception):
+    def __init__(self, *a):
+        self.base_message = "Can't place '{}' at ({},{}).".format(*a[:3])
+        Exception.__init__(self, *a)
+    def __unicode__(self):
+        return self.base_message + " " + self.message.format(*self.args)
+    __str__ = __unicode__
+
+class BadTile(TilePlacementError):
+    message = "Bad tile."
+
+class OutOfBounds(TilePlacementError):
+    message = "Out of bounds. Canvas size is ({3},{4})."
+
+class AlreadyPlaced(TilePlacementError):
+    message = "Already placed: '{3}'."
+
 
 class MagnitudeMap(list):
 
@@ -20,7 +37,9 @@ class MagnitudeMap(list):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
+        self.area = self.W * self.H
         self.remaining_area = (self.W - alley_width) * (self.H - alley_width)
+        self.sum_of_magnitudes = sum_of_magnitudes
         self.remaining_magnitudes = sum_of_magnitudes
         self.chars = chars
         self.A, self.B, self.C = chars
@@ -115,7 +134,15 @@ class MagnitudeMap(list):
 
 
     def place_tile(self, tile, x, y):
-        assert self[x][y] == self.C
+        if tile not in (self.A, self.B):
+            raise BadTile(tile, x, y)
+        try:
+            if x < 0 or y < 0:  # Beware of negative indexing! We don't want it.
+                raise IndexError
+            if self[x][y] != self.C:
+                raise AlreadyPlaced(tile, x, y, self[x][y])
+        except IndexError:
+            raise OutOfBounds(tile, x, y, self.W, self.H)
         self[x][y] = tile
         self.remaining_area -= 1
 
@@ -126,14 +153,7 @@ class MagnitudeMap(list):
         y = y + self.half_alley
         for x_ in range(x, x+w):
             for y_ in range(y, y+h):
-                try:
-                    self.place_tile(self.B, x_, y_)
-                except IndexError:
-                    print(shape, x, y)
-                    print(x_, y_, len(self), len(self[y_]))
-                    print(self)
-                    raise
-
+                self.place_tile(self.B, x_, y_)
         self.draw_half_alleys_around_shape((w,h), x, y)
 
 
@@ -309,46 +329,71 @@ class MagnitudeMap(list):
         return unsnapped
 
 
-def fake_data():
-    for i in range(40):
+def fake_data(nmags):
+    for i in range(nmags):
         yield random.randint(1, 10)
 
 
 if __name__ == '__main__':
     import sys
-    terminal = '\u2591\u2593 '
-    web = ( '<div class="tile A"></div>'
-          , '<div class="tile B"></div>'
-          , '<div class="tile C"></div>'
-           )
+    import traceback
 
-    magnitudes = list(fake_data())
-    m = MagnitudeMap(canvas_size=(128, 128), sum_of_magnitudes=sum(magnitudes), chars=web)
+    charsets = { 'terminal': '\u2591\u2593 '
+               , 'web': ( '<div class="tile A"></div>'
+                        , '<div class="tile B"></div>'
+                        , '<div class="tile C"></div>'
+                         )
+                }
+
+    args = dict(zip(['charset', 'W', 'H', 'N'], sys.argv[1:2] + map(int, sys.argv[2:])))
+    charset = charsets[args.get('charset', 'terminal')]
+    W = args.get('W', 128)
+    H = args.get('H', 128)
+    N = args.get('N', 40)
+
+    magnitudes = list(fake_data(N))
+    m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=sum(magnitudes), chars=charset)
     try:
         i = 0
         N = len(magnitudes)
         for magnitude in magnitudes:
             i += 1
             m.add(magnitude)
-    except NoPossibleShapes:
-        print("ran out of room", file=sys.stderr)
-        print(N - i, "remaining magnitudes summing to", m.remaining_magnitudes, file=sys.stderr)
-        print("remaining area:", m.remaining_area, file=sys.stderr)
     except:
-        print("errored", file=sys.stderr)
-        open('dump.map', 'w+').write(str(m))
-        raise
+        tb = traceback.format_exc()
+    else:
+        tb = ''
 
-    if m.chars == web:
+    if m.chars == charsets['web']:
         print("""
         <style>
-            div.wrapper { width: 1024px; height: 1024px; }
-            div.tile { width:4px; height: 4px; float: left; }
-            div.A { background: #FFFFFF; }
-            div.B { background: #0099FF; }
-            div.C { background: #EEEEEE; }
+            body {{ margin: 0; padding: 0; background: #CCC; }}
+            div.wrapper {{ width: {0}px; height: {1}px; margin: 100px auto; }}
+            div.tile {{ width:4px; height: 4px; float: left; }}
+            div.A {{ background: #FFFFFF; }}
+            div.B {{ background: #0099FF; }}
+            div.C {{ background: transparent; }}
         </style>
         <div class="wrapper">
-        """)
-    if m.chars == web:
+        """.format(m.W*4, m.H*4, (m.H*4) // 2))
+        print(m)
         print("</div>")
+    else:
+        print(m)
+
+    err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
+    err()
+    err("Placed {} out of {} magnitudes.".format(i, N))
+    err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
+         m.remaining_magnitudes
+       , m.sum_of_magnitudes
+       , (m.remaining_magnitudes / m.sum_of_magnitudes) * 100
+        ))
+    err( "Remaining area: {} / {} ({:.1f}%)".format(
+         m.remaining_area
+       , m.area
+       , (m.remaining_area / m.area) * 100
+        ))
+    if tb:
+        err()
+        err(tb)

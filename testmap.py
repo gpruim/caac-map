@@ -72,6 +72,68 @@ def test_load_checks_for_character_fitness():
     with raises(AssertionError):
         m.load(u)
 
+# place_tile - pt
+
+def test_pt_places_tile():
+    m = genmap.MagnitudeMap(canvas_size=(16,8))
+    m.place_tile(m.B, 3, 4)
+    assert unicode(m) == """\
+----------------
+-              -
+-              -
+-              -
+-  #           -
+-              -
+-              -
+----------------"""
+
+def test_pt_rejects_bad_tile():
+    m = genmap.MagnitudeMap(canvas_size=(16,8))
+    with raises(genmap.BadTile) as err:
+        m.place_tile('$', 3, 4)
+    assert unicode(err.value) == "Can't place '$' at (3,4). Bad tile."
+
+def test_pt_rejects_clobbering_tile():
+    m = genmap.MagnitudeMap(canvas_size=(16,8))
+    with raises(genmap.AlreadyPlaced) as err:
+        m.place_tile('#', 0, 0)
+    assert unicode(err.value) == "Can't place '#' at (0,0). Already placed: '-'."
+
+def test_pt_rejects_out_of_bounds_tile():
+    m = genmap.MagnitudeMap(canvas_size=(16,8))
+    with raises(genmap.OutOfBounds) as err:
+        m.place_tile('#', -1, 16)
+    assert unicode(err.value) == "Can't place '#' at (-1,16). Out of bounds. " \
+                                 "Canvas size is (16,8)."
+
+    m[0][0] = ' '
+    assert m[0][0] == ' '
+    raises(genmap.OutOfBounds, m.place_tile, '#', 0, -1)
+    raises(genmap.OutOfBounds, m.place_tile, '#', -1, 0)
+    m.place_tile('#', 0, 0)
+    assert m[0][0] == '#'
+
+    m[15][0] = ' '
+    assert m[15][0] == ' '
+    raises(genmap.OutOfBounds, m.place_tile, '#', 15, -1)
+    raises(genmap.OutOfBounds, m.place_tile, '#', 16, 0)
+    m.place_tile('#', 15, 0)
+    assert m[15][0] == '#'
+
+    m[0][7] = ' '
+    assert m[0][7] == ' '
+    raises(genmap.OutOfBounds, m.place_tile, '#', 0, 8)
+    raises(genmap.OutOfBounds, m.place_tile, '#', -1, 7)
+    m.place_tile('#', 0, 7)
+    assert m[0][7] == '#'
+
+    m[15][7] = ' '
+    assert m[15][7] == ' '
+    raises(genmap.OutOfBounds, m.place_tile, '#', 15, 8)
+    raises(genmap.OutOfBounds, m.place_tile, '#', 16, 7)
+    m.place_tile('#', 15, 7)
+    assert m[15][7] == '#'
+
 
 # find_starting_corner - fsc
 
