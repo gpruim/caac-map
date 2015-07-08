@@ -362,8 +362,8 @@ if __name__ == '__main__':
     if m.chars == charsets['web']:
         print("""
         <style>
-            body {{ margin: 0; padding: 0; background: #CCC; }}
-            div.wrapper {{ width: {0}px; height: {1}px; margin: 100px auto; }}
+            body {{ margin: 128px; padding: 0; background: #CCC; }}
+            div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
             div.tile {{ width:4px; height: 4px; float: left; }}
             div.A {{ background: #FFFFFF; }}
             div.B {{ background: #0099FF; }}
