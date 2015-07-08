@@ -170,10 +170,13 @@ class MagnitudeMap(list):
         return min(w, h) / max(w, h) < self.aspect_min
 
     def enough_room(self, w, h, x, y):
-        try:
-            return self[x+w][y+h] in (self.C, self.A)
-        except IndexError:
-            return False
+        for x_ in range(x, x+w):        # check first row
+            if self[x_][y] != self.C:
+                return False
+        for y_ in range(y, y+h):        # check final col
+            if self[x+w-1][y_] != self.C:
+                return False
+        return True
 
     def bad_shape_for(self, shape, x, y):
         w, h = shape

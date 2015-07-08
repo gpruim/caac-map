@@ -269,19 +269,34 @@ def test_bsf_rejects_when_not_enough_room():
 -              -
 -              -
 -              -
+-  ---         -
+-  -#-         -
+----------------""")
+
+    assert m.enough_room(3, 4, 1, 1)
+    assert not m.bad_shape_for((3, 4), 1, 1)
+    assert not m.enough_room(3, 5, 1, 1)
+    assert m.bad_shape_for((3, 5), 1, 1)
+
+    assert m.enough_room(14, 3, 1, 1)
+    assert not m.bad_shape_for((14, 3), 1, 1)
+    assert not m.enough_room(15, 3, 1, 1)
+    assert m.bad_shape_for((15, 3), 1, 1)
+
+def test_bsf_doesnt_ignore_intervening_shape_when_looking_for_enough_room():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m.load("""\
+----------------
+-              -
+------         -
+--###-         -
+------         -
 -              -
 -   #          -
 ----------------""")
 
-    assert m.enough_room(3, 4, 1, 1)
-    assert not m.enough_room(3, 5, 1, 1)
-    assert not m.bad_shape_for((3, 4), 1, 1)
-    assert m.bad_shape_for((3, 5), 1, 1)
-
-    assert m.enough_room(14, 3, 1, 1)
-    assert not m.enough_room(15, 3, 1, 1)
-    assert not m.bad_shape_for((14, 3), 1, 1)
-    assert m.bad_shape_for((15, 3), 1, 1)
+    assert not m.enough_room(3, 4, 1, 1)
+    assert m.bad_shape_for((3, 4), 1, 1)
 
 
 # get_snapped_shapes - gss
