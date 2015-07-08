@@ -505,3 +505,25 @@ def test_add_exhibits_pinch_prevention_the_other_way():
 --#########--#--
 ----------------
 ----------------"""
+
+def test_add_will_two_snap_to_a_soft_and_hard_bound():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=15, block_min=1)
+    m.load("""\
+----------------
+-------        -
+--####-        -
+--####-        -
+-------        -
+-              -
+-              -
+----------------""")
+    m.add(8)
+    assert unicode(m) == """\
+----------------
+----------------
+--####--######--
+--####--######--
+----------------
+-              -
+-              -
+----------------"""
