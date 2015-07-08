@@ -10,5 +10,6 @@ for i in range(ntries):
     stderr = StringIO()
     p = Popen('python genmap.py web'.split(), stdout=open('map.html', 'w+'), stderr=PIPE)
     if 'Traceback' not in p.stderr.read():
-        print("\nFound one!")
-        break
+        if 'Remaining area: 0':
+            print("\nFound one!")
+            break
