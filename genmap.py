@@ -55,10 +55,13 @@ class MagnitudeMap(list):
 
 
     def load(self, u):
+        self.remaining_area = self.W * self.H
         for y, row in enumerate(u.splitlines()):
             for x, char in enumerate(row):
                 assert char in self.chars
                 self[x][y] = char
+                if char != self.C:
+                    self.remaining_area -= 1
 
 
     def find_starting_corner(self):
