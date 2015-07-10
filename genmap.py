@@ -106,7 +106,7 @@ class MagnitudeMap(list):
         return target_area
 
 
-    def add(self, magnitude, shape_choice=None):
+    def add(self, uid, magnitude, shape_choice=None):
 
         # Find first empty cell.
         x, y = self.find_starting_corner()
@@ -129,7 +129,7 @@ class MagnitudeMap(list):
         self.draw_shape_at(shape, x, y)
 
         # Also save it for the SVG renderer to use.
-        self.shapes.append((x, y, shape))
+        self.shapes.append((uid, x, y, shape))
 
         # Decrement remaining_magnitudes.
         self.remaining_magnitudes -= magnitude
@@ -338,29 +338,31 @@ def fake_data(N):
     return [random.randint(1, 20) for i in range(N)]
 
 
-def main(charset, ntries, W, H, magnitudes):
+charsets = { 'ascii': '-# '
+           , 'utf8': '\u2591\u2593 '
+           , 'html': ( '<div class="tile A"></div>'
+                     , '<div class="tile B"></div>'
+                     , '<div class="tile C"></div>'
+                      )
+           , 'svg': 'SVG'  # hack
+            }
 
-    charsets = { 'ascii': '-# '
-               , 'utf8': '\u2591\u2593 '
-               , 'html': ( '<div class="tile A"></div>'
-                         , '<div class="tile B"></div>'
-                         , '<div class="tile C"></div>'
-                          )
-               , 'svg': 'SVG'  # hack
-                }
+def main(magnitudes, charset, ntries, width, height, alley_width):
     charset = charsets[charset]
+    canvas_size = (width, height)
     nmagnitudes = len(magnitudes)
-    smagnitudes = sum(magnitudes)
+    smagnitudes = sum([m[1] for m in magnitudes])
     err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
 
     for i in range(ntries):
         err('Iteration:', i)
         nplaced = 0
         nremaining = nmagnitudes
-        m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=smagnitudes, charset=charset)
+        m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
+                         alley_width=alley_width)
         try:
-            for magnitude in magnitudes:
-                m.add(magnitude)
+            for uid, magnitude in magnitudes:
+                m.add(uid, magnitude)
                 nplaced += 1
                 nremaining -= 1
         except:
@@ -391,15 +393,13 @@ def main(charset, ntries, W, H, magnitudes):
             w = h = 2 * int(ceil(sqrt((m.W ** 2) / 2)))
             half_w = w / 2
             half_h = h / 2
-            print('<?xml version="1.0" standalone="no"?>')
-            print('<?xml-stylesheet type="text/css" href="svg.css"?>')
             print('<svg width="{}px" height="{}px" '
                   'xmlns="http://www.w3.org/2000/svg">'.format(w, h))
             print('  <g transform="translate({} {}) rotate(45 {} {})">'
                   .format(half_w - half_W, half_h - half_H, half_W, half_H))
-            for x, y, (w, h) in m.shapes:
-                print('    <rect x="{}px" y="{}px" width="{}px" height="{}px" />'
-                      .format(x+m.half_alley, y+m.half_alley, w-m.alley_width, h-m.alley_width))
+            for uid, x, y, (w, h) in m.shapes:
+                print('    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
+                      .format(uid, x+m.half_alley, y+m.half_alley, w-m.alley_width, h-m.alley_width))
             print('  </g>')
             print('</svg>')
         elif m.charset == charsets['html']:
@@ -422,14 +422,26 @@ def main(charset, ntries, W, H, magnitudes):
 
 
 if __name__ == '__main__':
-    defaults = dict( charset='utf8'
-                   , ntries=1
-                   , W=128
-                   , H=128
-                   , nmags=40
-                    )
-    args = dict(defaults, **dict(zip( ['charset', 'ntries', 'W', 'H', 'nmags']
-                                    , sys.argv[1:2] + map(int, sys.argv[2:])
-                                     )))
-    args['magnitudes'] = fake_data(args.pop('nmags'))
-    main(**args)
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Generate a CaaC map.')
+    parser.add_argument('input', help='the name of an input file in json format, or a number of '
+                                      'fake magnitudes to generate')
+    parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
+                        choices=sorted(charsets.keys()))
+    parser.add_argument('--ntries', '-n', default=1, type=int, help='a number of tries to find a fit')
+    parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
+    parser.add_argument('--height', '-H', default=128, type=int, help='the height of the canvas')
+    parser.add_argument('--alley_width', '-a', default=2, type=int, help='the width of the alleys')
+
+    args = parser.parse_args()
+
+    # Convert `input` into `magnitudes`
+    if args.input.isdigit():
+        magnitudes = list(enumerate(fake_data(int(args.input))))
+    else:
+        import json
+        magnitudes = [(rec['id'], rec['magnitude']) for rec in json.load(open(args.input))]
+    args.__dict__.pop('input')
+
+    main(magnitudes, **args.__dict__)

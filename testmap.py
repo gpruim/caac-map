@@ -379,7 +379,7 @@ def test_gss_respects_block_min():
 
 def test_gss_respects_block_min_again():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(9, shape_choice=1)
+    m.add(0, 9, shape_choice=1)
     assert m.get_snapped_shapes(12, 1, 18) == [(3, 6)]
 
 def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
@@ -490,7 +490,7 @@ def test_dsa_draws_shape_that_doesnt_use_whole_canvas():
 
 def test_add_adds():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10)
-    m.add(10)
+    m.add(0, 10)
     assert unicode(m) == """\
 ----------------
 ----------------
@@ -503,7 +503,7 @@ def test_add_adds():
 
 def test_add_adds_a_half_magnitude():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(5, shape_choice=0)
+    m.add(0, 5, shape_choice=0)
     assert unicode(m) == """\
 ----------------
 ----------------
@@ -516,7 +516,7 @@ def test_add_adds_a_half_magnitude():
 
 def test_add_adds_the_other_shape_for_a_half_magnitude():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(5, shape_choice=1)
+    m.add(0, 5, shape_choice=1)
     assert unicode(m) == """\
 ----------------
 --------       -
@@ -529,8 +529,8 @@ def test_add_adds_the_other_shape_for_a_half_magnitude():
 
 def test_add_adds_a_second_magnitude():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(5, shape_choice=1)
-    m.add(5)
+    m.add(0, 5, shape_choice=1)
+    m.add(0, 5)
     assert unicode(m) == """\
 ----------------
 ----------------
@@ -543,8 +543,8 @@ def test_add_adds_a_second_magnitude():
 
 def test_add_adds_magnitudes_with_different_ratios():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, block_min=1)
-    m.add(4, shape_choice=1)
-    m.add(3)
+    m.add(0, 4, shape_choice=1)
+    m.add(0, 3)
     assert unicode(m) == """\
 ----------------
 ----------------
@@ -557,8 +557,8 @@ def test_add_adds_magnitudes_with_different_ratios():
 
 def test_add_exhibits_pinch_prevention():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(9, shape_choice=0)
-    m.add(1)
+    m.add(0, 9, shape_choice=0)
+    m.add(0, 1)
     assert unicode(m) == """\
 ----------------
 ----------------
@@ -571,8 +571,8 @@ def test_add_exhibits_pinch_prevention():
 
 def test_add_exhibits_pinch_prevention_the_other_way():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
-    m.add(9, shape_choice=1)
-    m.add(1)
+    m.add(0, 9, shape_choice=1)
+    m.add(0, 1)
     assert unicode(m) == """\
 ----------------
 ----------------
@@ -594,7 +594,7 @@ def test_add_will_two_snap_to_a_soft_and_hard_bound():
 -              -
 -              -
 ----------------""")
-    m.add(8)
+    m.add(0, 8)
     assert unicode(m) == """\
 ----------------
 ----------------
