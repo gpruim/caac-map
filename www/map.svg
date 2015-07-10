@@ -1,7 +1,7 @@
 <svg width="182" height="182" version="1.1" xmlns="http://www.w3.org/2000/svg">
   <g transform="translate(27.0 27.0) rotate(45 64.0 64.0)">
-    <rect x="2" y="2" width="4" height="11" />
-    <rect x="8" y="2" width="43" height="11" />
+    <rect id="456" x="2" y="2" width="4" height="11" />
+    <rect id="567" x="8" y="2" width="43" height="11" />
     <rect x="53" y="2" width="7" height="11" />
     <rect x="62" y="2" width="34" height="11" />
     <rect x="98" y="2" width="28" height="11" />
