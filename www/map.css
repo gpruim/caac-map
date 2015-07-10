@@ -1,0 +1,16 @@
+* { margin: 0; padding: 0;}
+body {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+}
+rect.selected {
+    fill: #33CC00;
+}
+rect:hover {
+    fill: #33CCCC;
+    cursor: pointer;
+}
