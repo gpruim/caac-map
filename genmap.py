@@ -342,6 +342,7 @@ def main(charset, ntries, W, H, magnitudes):
                          , '<div class="tile B"></div>'
                          , '<div class="tile C"></div>'
                           )
+               , 'svg': 'SVG'  # hack
                 }
     charset = charsets[charset]
     nmagnitudes = len(magnitudes)
@@ -379,10 +380,19 @@ def main(charset, ntries, W, H, magnitudes):
             err()
             err(tb)
 
-        if nplaced > 0:
+        if nremaining > 0:
             continue
 
-        if m.charset == charsets['html']:
+        if m.charset == charsets['svg']:
+            print('<svg width="10cm" height="10cm" xmlns="http://www.w3.org/2000/svg">')
+            print('''
+                <rect x="0.5cm" y="0.5cm" width="2cm" height="1cm" fill="green" />
+                <rect x="0.5cm" y="2cm" width="1cm" height="1.5cm" fill="green" />
+                <rect x="3cm" y="0.5cm" width="1.5cm" height="2cm" fill="green" />
+                <rect x="3.5cm" y="3cm" width="1cm" height="0.5cm" fill="green" />
+            ''')
+            print('</svg>')
+        elif m.charset == charsets['html']:
             print("""
             <style>
                 body {{ margin: 128px; padding: 0; background: #CCC; }}
