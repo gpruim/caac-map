@@ -2,6 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import random
+import sys
+import traceback
 
 
 class NoPossibleShapes(Exception): pass
@@ -32,7 +34,7 @@ class MagnitudeMap(list):
     B = '#' # Block/Building
     C = ' ' # Canvas
 
-    def __init__(self, canvas_size, sum_of_magnitudes=0, chars='-# ', alley_width=2, block_min=4,
+    def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2, block_min=4,
             aspect_min=0.2):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
@@ -41,8 +43,8 @@ class MagnitudeMap(list):
         self.remaining_area = (self.W - alley_width) * (self.H - alley_width)
         self.sum_of_magnitudes = sum_of_magnitudes
         self.remaining_magnitudes = sum_of_magnitudes
-        self.chars = chars
-        self.A, self.B, self.C = chars
+        self.charset = charset
+        self.A, self.B, self.C = charset
         self.half_alley = alley_width // 2
         self.shape_min = block_min + alley_width
         self.aspect_min = aspect_min
@@ -332,66 +334,72 @@ def fake_data(N):
     return [random.randint(1, 20) for i in range(N)]
 
 
-if __name__ == '__main__':
-    import sys
-    import traceback
+def main(charset, ntries, W, H, magnitudes):
 
-    charsets = { 'terminal': '\u2591\u2593 '
-               , 'web': ( '<div class="tile A"></div>'
-                        , '<div class="tile B"></div>'
-                        , '<div class="tile C"></div>'
-                         )
+    charsets = { 'ascii': '-# '
+               , 'utf8': '\u2591\u2593 '
+               , 'html': ( '<div class="tile A"></div>'
+                         , '<div class="tile B"></div>'
+                         , '<div class="tile C"></div>'
+                          )
                 }
+    charset = charsets[charset]
 
-    args = dict(zip(['charset', 'W', 'H', 'N'], sys.argv[1:2] + map(int, sys.argv[2:])))
-    charset = charsets[args.get('charset', 'terminal')]
-    W = args.get('W', 128)
-    H = args.get('H', 128)
-    N = args.get('N', 40)
+    for i in range(ntries):
+        nplaced = 0
+        m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=sum(magnitudes), charset=charset)
+        try:
+            for magnitude in magnitudes:
+                nplaced += 1
+                m.add(magnitude)
+        except:
+            tb = traceback.format_exc()
+        else:
+            tb = ''
 
-    magnitudes = fake_data(N)
-    m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=sum(magnitudes), chars=charset)
-    try:
-        i = 0
-        N = len(magnitudes)
-        for magnitude in magnitudes:
-            i += 1
-            m.add(magnitude)
-    except:
-        tb = traceback.format_exc()
-    else:
-        tb = ''
+        if m.charset == charsets['html']:
+            print("""
+            <style>
+                body {{ margin: 128px; padding: 0; background: #CCC; }}
+                div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
+                div.tile {{ width:4px; height: 4px; float: left; }}
+                div.A {{ background: #FFFFFF; }}
+                div.B {{ background: #0099FF; }}
+                div.C {{ background: transparent; }}
+            </style>
+            <div class="wrapper">
+            """.format(m.W*4, m.H*4, (m.H*4) // 2))
+            print(m)
+            print("</div>")
+        else:
+            print(m)
 
-    if m.chars == charsets['web']:
-        print("""
-        <style>
-            body {{ margin: 128px; padding: 0; background: #CCC; }}
-            div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
-            div.tile {{ width:4px; height: 4px; float: left; }}
-            div.A {{ background: #FFFFFF; }}
-            div.B {{ background: #0099FF; }}
-            div.C {{ background: transparent; }}
-        </style>
-        <div class="wrapper">
-        """.format(m.W*4, m.H*4, (m.H*4) // 2))
-        print(m)
-        print("</div>")
-    else:
-        print(m)
-
-    err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
-    err()
-    err("Placed {} out of {} magnitudes.".format(i, N))
-    err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
-         m.remaining_magnitudes
-       , m.sum_of_magnitudes
-       , (m.remaining_magnitudes / m.sum_of_magnitudes) * 100
-        ))
-    err( "Remaining area: {} / {} ({:.1f}%)".format(
-         m.remaining_area
-       , m.area
-       , (m.remaining_area / m.area) * 100
-        ))
-    if tb:
+        err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
         err()
-        err(tb)
+        err("Placed {} out of {} magnitudes.".format(nplaced, len(magnitudes)))
+        err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
+             m.remaining_magnitudes
+           , m.sum_of_magnitudes
+           , (m.remaining_magnitudes / m.sum_of_magnitudes) * 100
+            ))
+        err( "Remaining area: {} / {} ({:.1f}%)".format(
+             m.remaining_area
+           , m.area
+           , (m.remaining_area / m.area) * 100
+            ))
+        if tb:
+            err()
+            err(tb)
+
+
+if __name__ == '__main__':
+    args = dict( charset='utf8'
+               , ntries=1
+               , W=128
+               , H=128
+               , nmags=40
+               , **dict(zip( ['charset', 'ntries', 'W', 'H', 'nmags']
+                           , sys.argv[1:2] + map(int, sys.argv[2:])
+                            )))
+    args['magnitudes'] = fake_data(args.pop('nmags'))
+    main(**args)
