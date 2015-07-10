@@ -344,18 +344,43 @@ def main(charset, ntries, W, H, magnitudes):
                           )
                 }
     charset = charsets[charset]
+    nmagnitudes = len(magnitudes)
+    smagnitudes = sum(magnitudes)
+    err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
 
     for i in range(ntries):
+        err('Iteration:', i)
         nplaced = 0
-        m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=sum(magnitudes), charset=charset)
+        nremaining = nmagnitudes
+        m = MagnitudeMap(canvas_size=(W, H), sum_of_magnitudes=smagnitudes, charset=charset)
         try:
             for magnitude in magnitudes:
-                nplaced += 1
                 m.add(magnitude)
+                nplaced += 1
+                nremaining -= 1
         except:
             tb = traceback.format_exc()
         else:
             tb = ''
+
+        err()
+        err("Placed {} out of {} magnitudes.".format(nplaced, len(magnitudes)))
+        err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
+             m.remaining_magnitudes
+           , m.sum_of_magnitudes
+           , (m.remaining_magnitudes / m.sum_of_magnitudes) * 100
+            ))
+        err( "Remaining area: {} / {} ({:.1f}%)".format(
+             m.remaining_area
+           , m.area
+           , (m.remaining_area / m.area) * 100
+            ))
+        if tb:
+            err()
+            err(tb)
+
+        if nplaced > 0:
+            continue
 
         if m.charset == charsets['html']:
             print("""
@@ -373,33 +398,18 @@ def main(charset, ntries, W, H, magnitudes):
             print("</div>")
         else:
             print(m)
-
-        err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
-        err()
-        err("Placed {} out of {} magnitudes.".format(nplaced, len(magnitudes)))
-        err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
-             m.remaining_magnitudes
-           , m.sum_of_magnitudes
-           , (m.remaining_magnitudes / m.sum_of_magnitudes) * 100
-            ))
-        err( "Remaining area: {} / {} ({:.1f}%)".format(
-             m.remaining_area
-           , m.area
-           , (m.remaining_area / m.area) * 100
-            ))
-        if tb:
-            err()
-            err(tb)
+        break
 
 
 if __name__ == '__main__':
-    args = dict( charset='utf8'
-               , ntries=1
-               , W=128
-               , H=128
-               , nmags=40
-               , **dict(zip( ['charset', 'ntries', 'W', 'H', 'nmags']
-                           , sys.argv[1:2] + map(int, sys.argv[2:])
-                            )))
+    defaults = dict( charset='utf8'
+                   , ntries=1
+                   , W=128
+                   , H=128
+                   , nmags=40
+                    )
+    args = dict(defaults, **dict(zip( ['charset', 'ntries', 'W', 'H', 'nmags']
+                                    , sys.argv[1:2] + map(int, sys.argv[2:])
+                                     )))
     args['magnitudes'] = fake_data(args.pop('nmags'))
     main(**args)

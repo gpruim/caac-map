@@ -8,7 +8,7 @@ ntries = 10000
 for i in range(ntries):
     print("\rTries: {:,} / {:,} ({:.1f}%)".format(i, ntries, i / ntries), end='')
     stderr = StringIO()
-    p = Popen('python genmap.py web'.split(), stdout=open('map.html', 'w+'), stderr=PIPE)
+    p = Popen('python genmap.py html 1'.split(), stdout=open('map.html', 'w+'), stderr=PIPE)
     err = p.stderr.read()
     if 'Traceback' not in err:
         if 'Remaining area: 0' in err:
