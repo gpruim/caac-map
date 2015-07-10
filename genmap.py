@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import random
 import sys
 import traceback
+from math import ceil, sqrt
 
 
 class NoPossibleShapes(Exception): pass
@@ -49,9 +50,9 @@ class MagnitudeMap(list):
         self.shape_min = block_min + alley_width
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
+        self.shapes = []
 
         # Build the base map. It's surrounded by alleys.
-
         innerW = self.W - (self.alley_width * 2)
         innerH = self.H - (self.alley_width * 2)
         half_alley = lambda P=self.A: [P] * self.half_alley
@@ -126,6 +127,9 @@ class MagnitudeMap(list):
         else:
             shape = random.choice(shapes)
         self.draw_shape_at(shape, x, y)
+
+        # Also save it for the SVG renderer to use.
+        self.shapes.append((x, y, shape))
 
         # Decrement remaining_magnitudes.
         self.remaining_magnitudes -= magnitude
@@ -380,17 +384,23 @@ def main(charset, ntries, W, H, magnitudes):
             err()
             err(tb)
 
-        if nremaining > 0:
-            continue
-
         if m.charset == charsets['svg']:
-            print('<svg width="10cm" height="10cm" xmlns="http://www.w3.org/2000/svg">')
-            print('''
-                <rect x="0.5cm" y="0.5cm" width="2cm" height="1cm" fill="green" />
-                <rect x="0.5cm" y="2cm" width="1cm" height="1.5cm" fill="green" />
-                <rect x="3cm" y="0.5cm" width="1.5cm" height="2cm" fill="green" />
-                <rect x="3.5cm" y="3cm" width="1cm" height="0.5cm" fill="green" />
-            ''')
+            assert m.W == m.H  # sorry :-/
+            half_W = m.W / 2
+            half_H = m.H / 2
+            w = h = 2 * int(ceil(sqrt((m.W ** 2) / 2)))
+            half_w = w / 2
+            half_h = h / 2
+            print('<?xml version="1.0" standalone="no"?>')
+            print('<?xml-stylesheet type="text/css" href="svg.css"?>')
+            print('<svg width="{}px" height="{}px" '
+                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h))
+            print('  <g transform="translate({} {}) rotate(45 {} {})">'
+                  .format(half_w - half_W, half_h - half_H, half_W, half_H))
+            for x, y, (w, h) in m.shapes:
+                print('    <rect x="{}px" y="{}px" width="{}px" height="{}px" />'
+                      .format(x+m.half_alley, y+m.half_alley, w-m.alley_width, h-m.alley_width))
+            print('  </g>')
             print('</svg>')
         elif m.charset == charsets['html']:
             print("""
