@@ -9,5 +9,7 @@ Map.init = function() {
 
         $('#10').attr('fill', '#025127');
         $('#20').attr('class', 'selected'); // .addClass doesn't work for whatever reason
+
+        $('rect').click(function() { alert('Yo!') });
     });
 };
