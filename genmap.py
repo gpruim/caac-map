@@ -347,7 +347,7 @@ charsets = { 'ascii': '-# '
            , 'svg': 'SVG'  # hack
             }
 
-def main(magnitudes, charset, ntries, width, height, alley_width):
+def main(magnitudes, charset, ntries, width, height, alley_width, block_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     nmagnitudes = len(magnitudes)
@@ -359,7 +359,7 @@ def main(magnitudes, charset, ntries, width, height, alley_width):
         nplaced = 0
         nremaining = nmagnitudes
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
-                         alley_width=alley_width)
+                         alley_width=alley_width, block_min=block_min)
         try:
             for uid, magnitude in magnitudes:
                 m.add(uid, magnitude)
@@ -429,10 +429,13 @@ if __name__ == '__main__':
                                       'fake magnitudes to generate')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
-    parser.add_argument('--ntries', '-n', default=1, type=int, help='a number of tries to find a fit')
+    parser.add_argument('--ntries', '-n', default=1, type=int,
+                        help='a number of tries to find a fit')
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
     parser.add_argument('--height', '-H', default=128, type=int, help='the height of the canvas')
     parser.add_argument('--alley_width', '-a', default=2, type=int, help='the width of the alleys')
+    parser.add_argument('--block_min', '-b', default=4, type=int,
+                        help='the minimum width of the blocks')
 
     args = parser.parse_args()
 
