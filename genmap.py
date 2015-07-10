@@ -387,10 +387,10 @@ def main(magnitudes, charset, ntries, width, height, alley_width):
             err(tb)
 
         if m.charset == charsets['svg']:
-            assert m.W == m.H  # sorry :-/
             half_W = m.W / 2
             half_H = m.H / 2
-            w = h = 2 * int(ceil(sqrt((m.W ** 2) / 2)))
+            rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
+            w = h = rotated_side(m.W) + rotated_side(m.H)
             half_w = w / 2
             half_h = h / 2
             print('<svg width="{}px" height="{}px" '
