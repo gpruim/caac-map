@@ -8,7 +8,7 @@ ntries = 10000
 outputs = set()
 for i in range(ntries):
     print("\rTries: {:,} / {:,} ({:.1f}%)".format(i, ntries, i / ntries), end='')
-    p = Popen( 'python genmap.py 62 -W256 -H512 -a4 -b8 --charset=svg'.split()
+    p = Popen( 'python genmap.py 62 -W512 -H1024 -a8 -b16 --charset=svg'.split()
              , stdout=open('map.svg', 'w+')
              , stderr=PIPE
               )
