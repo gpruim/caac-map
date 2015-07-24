@@ -60,7 +60,7 @@ def dump_topics(topics, fsdir):
     for name, resources in topics.items():
         fspath = os.path.join(fsdir, name+'.json')
         fp = open(fspath, 'w+')
-        json.dump(topics, fp)
+        json.dump(topics, fp, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 def finalize(staging, final):
