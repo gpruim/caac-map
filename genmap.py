@@ -10,6 +10,7 @@ from math import ceil, sqrt
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
+class UnknownShape(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -75,6 +76,13 @@ class MagnitudeMap(list):
     def __str__(self):
         return unicode(self).encode('UTF-8')
 
+    def get_shape(self, key):
+        for uid, x, y, (w, h) in self.shapes:
+            if uid == key:
+                return x, y, (w, h)
+        else:
+            raise UnknownShape()
+
 
     def load(self, u):
         self.remaining_area = self.W * self.H
@@ -84,6 +92,41 @@ class MagnitudeMap(list):
                 self[x][y] = char
                 if char != self.C:
                     self.remaining_area -= 1
+
+
+    def print_(self):
+        if self.charset == charsets['svg']:
+            half_W = self.W / 2
+            half_H = self.H / 2
+            rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
+            w = h = rotated_side(self.W) + rotated_side(self.H)
+            half_w = w / 2
+            half_h = h / 2
+            print('<svg width="{}px" height="{}px" '
+                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h))
+            print('  <g transform="translate({} {}) rotate(45 {} {})">'
+                  .format(half_w - half_W, half_h - half_H, half_W, half_H))
+            for uid, x, y, (w, h) in self.shapes:
+                print('    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
+                      .format(uid, x+self.half_alley, y+self.half_alley, w-self.alley_width, h-self.alley_width))
+            print('  </g>')
+            print('</svg>')
+        elif self.charset == charsets['html']:
+            print("""
+            <style>
+                body {{ margin: 128px; padding: 0; background: #CCC; }}
+                div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
+                div.tile {{ width:4px; height: 4px; float: left; }}
+                div.A {{ background: #FFFFFF; }}
+                div.B {{ background: #0099FF; }}
+                div.C {{ background: transparent; }}
+            </style>
+            <div class="wrapper">
+            """.format(self.W*4, self.H*4, (self.H*4) // 2))
+            print(self)
+            print("</div>")
+        else:
+            print(self)
 
 
     def find_starting_corner(self):
@@ -347,13 +390,28 @@ charsets = { 'ascii': '-# '
            , 'svg': 'SVG'  # hack
             }
 
-def main(magnitudes, charset, ntries, width, height, alley_width, building_min):
+
+def err(*a, **kw):
+    print(file=sys.stderr, *a, **kw)
+
+
+def main(magnitudeses, charset, ntries, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
+    big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
+    m = fill_one(charset, ntries, canvas_size, big, alley_width * 4, building_min)
+    blocks = []
+    for name, magnitudes in magnitudeses.items():
+        err()
+        err(name, '-' * (80 - len(name) - 1))
+        err()
+        x, y, canvas_size = m.get_shape(name)
+        blocks.append(fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min))
+
+
+def fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min):
     nmagnitudes = len(magnitudes)
     smagnitudes = sum([m[1] for m in magnitudes])
-    err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
-
     for i in range(ntries):
         err('Iteration:', i)
         nplaced = 0
@@ -386,39 +444,8 @@ def main(magnitudes, charset, ntries, width, height, alley_width, building_min):
             err()
             err(tb)
 
-        if m.charset == charsets['svg']:
-            half_W = m.W / 2
-            half_H = m.H / 2
-            rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
-            w = h = rotated_side(m.W) + rotated_side(m.H)
-            half_w = w / 2
-            half_h = h / 2
-            print('<svg width="{}px" height="{}px" '
-                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h))
-            print('  <g transform="translate({} {}) rotate(45 {} {})">'
-                  .format(half_w - half_W, half_h - half_H, half_W, half_H))
-            for uid, x, y, (w, h) in m.shapes:
-                print('    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                      .format(uid, x+m.half_alley, y+m.half_alley, w-m.alley_width, h-m.alley_width))
-            print('  </g>')
-            print('</svg>')
-        elif m.charset == charsets['html']:
-            print("""
-            <style>
-                body {{ margin: 128px; padding: 0; background: #CCC; }}
-                div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
-                div.tile {{ width:4px; height: 4px; float: left; }}
-                div.A {{ background: #FFFFFF; }}
-                div.B {{ background: #0099FF; }}
-                div.C {{ background: transparent; }}
-            </style>
-            <div class="wrapper">
-            """.format(m.W*4, m.H*4, (m.H*4) // 2))
-            print(m)
-            print("</div>")
-        else:
-            print(m)
         break
+    return m
 
 
 if __name__ == '__main__':
@@ -446,7 +473,7 @@ if __name__ == '__main__':
     else:
         import json
         blocks = json.load(open(args.input))
-        xrec = lambda rec: [(rec['uuid'], rec['duration']) for rec in rec]
+        xrec = lambda rec: [(rec['uuid'], int(rec['duration'])) for rec in rec]
         magnitudes = {name: xrec(rec) for name, rec in blocks.items()}
     args.__dict__.pop('input')
 
