@@ -32,11 +32,11 @@ class AlreadyPlaced(TilePlacementError):
 class MagnitudeMap(list):
 
     A = '-' # Alley
-    B = '#' # Block/Building
+    B = '#' # Building
     C = ' ' # Canvas
 
-    def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2, block_min=4,
-            aspect_min=0.2):
+    def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2,
+            building_min=4, aspect_min=0.2):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -47,7 +47,7 @@ class MagnitudeMap(list):
         self.charset = charset
         self.A, self.B, self.C = charset
         self.half_alley = alley_width // 2
-        self.shape_min = block_min + alley_width
+        self.shape_min = building_min + alley_width
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
         self.shapes = []
@@ -347,7 +347,7 @@ charsets = { 'ascii': '-# '
            , 'svg': 'SVG'  # hack
             }
 
-def main(magnitudes, charset, ntries, width, height, alley_width, block_min):
+def main(magnitudes, charset, ntries, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     nmagnitudes = len(magnitudes)
@@ -359,7 +359,7 @@ def main(magnitudes, charset, ntries, width, height, alley_width, block_min):
         nplaced = 0
         nremaining = nmagnitudes
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
-                         alley_width=alley_width, block_min=block_min)
+                         alley_width=alley_width, building_min=building_min)
         try:
             for uid, magnitude in magnitudes:
                 m.add(uid, magnitude)
@@ -434,7 +434,7 @@ if __name__ == '__main__':
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
     parser.add_argument('--height', '-H', default=128, type=int, help='the height of the canvas')
     parser.add_argument('--alley_width', '-a', default=2, type=int, help='the width of the alleys')
-    parser.add_argument('--block_min', '-b', default=4, type=int,
+    parser.add_argument('--building_min', '-b', default=4, type=int,
                         help='the minimum width of the blocks')
 
     args = parser.parse_args()
