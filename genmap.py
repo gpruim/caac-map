@@ -76,12 +76,12 @@ class MagnitudeMap(list):
     def __str__(self):
         return unicode(self).encode('UTF-8')
 
-    def get_shape(self, key):
+    def get_shape(self, uid):
         for uid, x, y, (w, h) in self.shapes:
-            if uid == key:
+            if uid == uid:
                 return x, y, (w, h)
         else:
-            raise UnknownShape()
+            raise UnknownShape(uid)
 
 
     def load(self, u):
@@ -406,14 +406,17 @@ def main(magnitudeses, charset, ntries, width, height, alley_width, building_min
         err(name, '-' * (80 - len(name) - 1))
         err()
         x, y, canvas_size = m.get_shape(name)
-        blocks.append(fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min))
+        blocks.append(fill_one(charset, 10000, canvas_size, magnitudes, alley_width, building_min))
 
 
 def fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min):
-    nmagnitudes = len(magnitudes)
-    smagnitudes = sum([m[1] for m in magnitudes])
     for i in range(ntries):
         err('Iteration:', i)
+
+        magnitudes = [(uuid, random.randint(1, 10)) for uuid in magnitudes] # Get to work, monkeys!
+        nmagnitudes = len(magnitudes)
+        smagnitudes = sum([m[1] for m in magnitudes])
+
         nplaced = 0
         nremaining = nmagnitudes
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
@@ -444,7 +447,8 @@ def fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min
             err()
             err(tb)
 
-        break
+        if nremaining == 0:
+            break
     return m
 
 
