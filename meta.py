@@ -9,7 +9,7 @@ outputs = set()
 for i in range(ntries):
     print("\rTries: {:,} / {:,} ({:.1f}%)".format(i, ntries, i / ntries), end='')
     p = Popen( 'python genmap.py 62 -W512 -H1024 -a8 -b16 --charset=svg'.split()
-             , stdout=open('map.svg', 'w+')
+             , stdout=open('output/.map.svg', 'w+')
              , stderr=PIPE
               )
     err = p.stderr.read()
@@ -25,5 +25,5 @@ for i in range(ntries):
         if 'Remaining area: 0' in err:
             print("\nFound one!")
             print(err)
-            os.system('mv map.svg www/map.svg')
+            os.system('mv output/.map.svg output/map.svg')
             break

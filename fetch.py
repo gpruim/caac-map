@@ -27,11 +27,6 @@ def _get(url):
     return response.text
 
 
-def prepare_directory(fspath):
-    shutil.rmtree(fspath, ignore_errors=True)
-    os.mkdir(fspath)
-
-
 def fetch_worksheets(sheet_key):
     url = "https://spreadsheets.google.com/feeds/worksheets/{}/public/basic"
     url = url.format(sheet_key)
@@ -56,30 +51,22 @@ def fetch_resources_by_topic(worksheets):
     return topics
 
 
-def dump_topics(topics, fsdir):
-    for name, resources in topics.items():
-        fspath = os.path.join(fsdir, name+'.json')
-        fp = open(fspath, 'w+')
-        json.dump(topics, fp, sort_keys=True, indent=4, separators=(',', ': '))
+def dump_topics(topics, fspath):
+    fp = open(fspath, 'w+')
+    json.dump(topics, fp, sort_keys=True, indent=4, separators=(',', ': '))
 
 
-def finalize(staging, final):
-    shutil.rmtree(final, ignore_errors=True)
-    shutil.move(staging, final)
-
-
-def main(sheets_key, staging_dir, final_dir):
-    prepare_directory(staging_dir)
+def main(sheets_key, staging_filepath, final_filepath):
     worksheets = fetch_worksheets(sheets_key)
     topics = fetch_resources_by_topic(worksheets)
-    dump_topics(topics, staging_dir)
-    finalize(staging_dir, final_dir)
+    dump_topics(topics, staging_filepath)
+    shutil.move(staging_filepath, final_filepath)
 
 
 if __name__ == '__main__':
 
     sheets_key = '1wZ2uz0KTkylLgo46fJ7gYYpNEKjVljoGTCjFecjZQ9c'
-    staging_dir = '.newdata'
-    final_dir = 'data'
+    staging = os.path.join('output', '.resources.json')
+    final = os.path.join('output', 'resources.json')
 
-    main(sheets_key, staging_dir, final_dir)
+    main(sheets_key, staging, final)
