@@ -94,7 +94,7 @@ class MagnitudeMap(list):
                     self.remaining_area -= 1
 
 
-    def print_(self):
+    def print_(self, fp=sys.stdout):
         if self.charset == charsets['svg']:
             half_W = self.W / 2
             half_H = self.H / 2
@@ -103,14 +103,14 @@ class MagnitudeMap(list):
             half_w = w / 2
             half_h = h / 2
             print('<svg width="{}px" height="{}px" '
-                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h))
+                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
             print('  <g transform="translate({} {}) rotate(45 {} {})">'
-                  .format(half_w - half_W, half_h - half_H, half_W, half_H))
+                  .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
             for uid, x, y, (w, h) in self.shapes:
                 print('    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                      .format(uid, x+self.half_alley, y+self.half_alley, w-self.alley_width, h-self.alley_width))
-            print('  </g>')
-            print('</svg>')
+                      .format(uid, x+self.half_alley, y+self.half_alley, w-self.alley_width, h-self.alley_width), file=fp)
+            print('  </g>', file=fp)
+            print('</svg>', file=fp)
         elif self.charset == charsets['html']:
             print("""
             <style>
@@ -122,11 +122,11 @@ class MagnitudeMap(list):
                 div.C {{ background: transparent; }}
             </style>
             <div class="wrapper">
-            """.format(self.W*4, self.H*4, (self.H*4) // 2))
-            print(self)
-            print("</div>")
+            """.format(self.W*4, self.H*4, (self.H*4) // 2), file=fp)
+            print(self, file=fp)
+            print("</div>", file=fp)
         else:
-            print(self)
+            print(self, file=fp)
 
 
     def find_starting_corner(self):
@@ -399,21 +399,24 @@ def main(magnitudeses, charset, ntries, width, height, alley_width, building_min
     charset = charsets[charset]
     canvas_size = (width, height)
     big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    m = fill_one(charset, ntries, canvas_size, big, alley_width * 4, building_min)
+    big = fill_one(charset, ntries, canvas_size, big, alley_width * 4, building_min)
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
         err(name, '-' * (80 - len(name) - 1))
         err()
-        x, y, canvas_size = m.get_shape(name)
+        x, y, canvas_size = big.get_shape(name)
         blocks.append(fill_one(charset, 10000, canvas_size, magnitudes, alley_width, building_min))
+    for i, m in enumerate([big] + blocks):
+        fp = open('output/map-{}.svg'.format(i), 'w+')
+        m.print_(fp=fp)
 
 
 def fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min):
     for i in range(ntries):
         err('Iteration:', i)
 
-        magnitudes = [(uuid, random.randint(1, 10)) for uuid in magnitudes] # Get to work, monkeys!
+        magnitudes = [(uid, random.randint(1, 10)) for uid, mag in magnitudes] # Monkeys!
         nmagnitudes = len(magnitudes)
         smagnitudes = sum([m[1] for m in magnitudes])
 

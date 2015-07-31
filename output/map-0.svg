@@ -1,0 +1,9 @@
+<svg width="364px" height="364px" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(54.0 54.0) rotate(45 128.0 128.0)">
+    <rect id="coding_gaming" x="8px" y="8px" width="240px" height="64px" />
+    <rect id="art_design" x="8px" y="80px" width="50px" height="26px" />
+    <rect id="robotics" x="66px" y="80px" width="93px" height="168px" />
+    <rect id="food_gardening" x="167px" y="80px" width="81px" height="168px" />
+    <rect id="storytelling" x="8px" y="114px" width="50px" height="134px" />
+  </g>
+</svg>
