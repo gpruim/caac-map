@@ -425,8 +425,9 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Generate a CaaC map.')
-    parser.add_argument('input', help='the name of an input file in json format, or a number of '
-                                      'fake magnitudes to generate')
+    parser.add_argument('input', help='the name of an input file in json format, or a number n to '
+                                      'seed the generation of {n/2 .. n} fake magnitudes each for '
+                                      'seven blocks')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
     parser.add_argument('--ntries', '-n', default=1, type=int,
@@ -441,10 +442,12 @@ if __name__ == '__main__':
 
     # Convert `input` into `magnitudes`
     if args.input.isdigit():
-        magnitudes = list(enumerate(fake_data(int(args.input))))
+        magnitudes = {name: list(enumerate(fake_data(int(args.input)))) for name in 'abcdefg'}
     else:
         import json
-        magnitudes = [(rec['id'], rec['magnitude']) for rec in json.load(open(args.input))]
+        blocks = json.load(open(args.input))
+        xrec = lambda rec: [(rec['uuid'], rec['duration']) for rec in rec]
+        magnitudes = {name: xrec(rec) for name, rec in blocks.items()}
     args.__dict__.pop('input')
 
     main(magnitudes, **args.__dict__)
