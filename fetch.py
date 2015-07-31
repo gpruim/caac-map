@@ -56,17 +56,17 @@ def dump_topics(topics, fspath):
     json.dump(topics, fp, sort_keys=True, indent=4, separators=(',', ': '))
 
 
-def main(sheets_key, staging_filename, final_filename):
+def main(sheets_key, staging_filepath, final_filepath):
     worksheets = fetch_worksheets(sheets_key)
     topics = fetch_resources_by_topic(worksheets)
-    dump_topics(topics, staging_filename)
-    shutil.move(staging_filename, final_filename)
+    dump_topics(topics, staging_filepath)
+    shutil.move(staging_filepath, final_filepath)
 
 
 if __name__ == '__main__':
 
     sheets_key = '1wZ2uz0KTkylLgo46fJ7gYYpNEKjVljoGTCjFecjZQ9c'
-    staging_dir = '.resources.json'
-    final_dir = 'resources.json'
+    staging = os.path.join('output', '.resources.json')
+    final = os.path.join('output', 'resources.json')
 
-    main(sheets_key, staging_dir, final_dir)
+    main(sheets_key, staging, final)
