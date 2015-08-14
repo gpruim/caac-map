@@ -78,8 +78,8 @@ class MagnitudeMap(list):
         return unicode(self).encode('UTF-8')
 
     def get_shape(self, uid):
-        for uid, x, y, (w, h) in self.shapes:
-            if uid == uid:
+        for candidate, x, y, (w, h) in self.shapes:
+            if candidate == uid:
                 return x, y, (w, h)
         else:
             raise UnknownShape(uid)
