@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
 import random
 import sys
 import traceback
@@ -395,25 +396,28 @@ def err(*a, **kw):
     print(file=sys.stderr, *a, **kw)
 
 
-def main(magnitudeses, charset, ntries, width, height, alley_width, building_min):
+def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, ntries, canvas_size, big, alley_width * 4, building_min)
+    big = fill_one(charset, canvas_size, big, alley_width * 4, building_min)
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
         err(name, '-' * (80 - len(name) - 1))
         err()
         x, y, canvas_size = big.get_shape(name)
-        blocks.append(fill_one(charset, 10000, canvas_size, magnitudes, alley_width, building_min))
+        blocks.append(fill_one(charset, canvas_size, magnitudes, alley_width, building_min))
     for i, m in enumerate([big] + blocks):
         fp = open('output/map-{}.svg'.format(i), 'w+')
         m.print_(fp=fp)
 
 
-def fill_one(charset, ntries, canvas_size, magnitudes, alley_width, building_min):
-    for i in range(ntries):
+def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
+    i = 0
+    while 1:
+        i += 1
+        os.system('cls' if os.name=='nt' else 'clear')
         err('Iteration:', i)
 
         magnitudes = [(uid, random.randint(1, 10)) for uid, mag in magnitudes] # Monkeys!
@@ -464,8 +468,6 @@ if __name__ == '__main__':
                                       'seven blocks')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
-    parser.add_argument('--ntries', '-n', default=1, type=int,
-                        help='a number of tries to find a fit')
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
     parser.add_argument('--height', '-H', default=128, type=int, help='the height of the canvas')
     parser.add_argument('--alley_width', '-a', default=2, type=int, help='the width of the alleys')
