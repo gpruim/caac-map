@@ -361,14 +361,14 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, canvas_size, big, alley_width * 4, building_min)
+    big = fill_one(charset, 'the whole thing', canvas_size, big, alley_width * 4, building_min)
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
         err(name, '-' * (80 - len(name) - 1))
         err()
         x, y, canvas_size = big.get_shape(name)
-        blocks.append(fill_one(charset, canvas_size, magnitudes, alley_width, building_min))
+        blocks.append(fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min))
 
 
     # Generate a combined SVG.
@@ -406,7 +406,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     print('</svg>', file=fp)
 
 
-def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
+def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min):
     i = 0
     while 1:
         i += 1
@@ -431,7 +431,7 @@ def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
             tb = ''
 
         err()
-        err("Placed {} out of {} magnitudes.".format(nplaced, len(magnitudes)))
+        err("Placed {} out of {} magnitudes for {}.".format(nplaced, len(magnitudes), name))
         err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
              m.remaining_magnitudes
            , m.sum_of_magnitudes
