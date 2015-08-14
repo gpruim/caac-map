@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import os
 import random
 import sys
 import traceback
@@ -417,7 +416,6 @@ def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
     i = 0
     while 1:
         i += 1
-        os.system('cls' if os.name=='nt' else 'clear')
         err('Iteration:', i)
 
         magnitudes = [(uid, random.randint(1, 10)) for uid, mag in magnitudes] # Monkeys!
