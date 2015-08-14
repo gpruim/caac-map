@@ -377,15 +377,18 @@ def err(*a, **kw):
 def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
+    street_width = alley_width * 4
+    offset = street_width - alley_width
     big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, 'the whole thing', canvas_size, big, alley_width * 20, building_min)
+    big = fill_one(charset, 'the whole thing', canvas_size, big, street_width, building_min)
     print(big.to_svg(), file=open('output/big.svg', 'w+'))
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
         err(name, '-' * (80 - len(name) - 1))
         err()
-        x, y, canvas_size = big.get_shape(name)
+        x, y, (w, h) = big.get_shape(name)
+        canvas_size = (w - offset, h - offset)
         blocks.append(fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min))
 
 
@@ -406,8 +409,9 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     print('  <g transform="translate({} {}) rotate(45 {} {})">'
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
+    offset = street_width // 2
     for (uid, x, y, shape), block in zip(big.shapes, blocks):
-        print(block.to_svg(uid, x, y), file=fp)
+        print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
     print('</svg>', file=fp)
