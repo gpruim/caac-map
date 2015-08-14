@@ -454,7 +454,7 @@ def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
             err()
             err(tb)
 
-        if nremaining == 0:
+        if nremaining == 0 and m.remaining_area == 0:
             break
     return m
 
