@@ -111,20 +111,6 @@ class MagnitudeMap(list):
                       .format(uid, x+self.half_alley, y+self.half_alley, w-self.alley_width, h-self.alley_width), file=fp)
             print('  </g>', file=fp)
             print('</svg>', file=fp)
-        elif self.charset == charsets['html']:
-            print("""
-            <style>
-                body {{ margin: 128px; padding: 0; background: #CCC; }}
-                div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
-                div.tile {{ width:4px; height: 4px; float: left; }}
-                div.A {{ background: #FFFFFF; }}
-                div.B {{ background: #0099FF; }}
-                div.C {{ background: transparent; }}
-            </style>
-            <div class="wrapper">
-            """.format(self.W*4, self.H*4, (self.H*4) // 2), file=fp)
-            print(self, file=fp)
-            print("</div>", file=fp)
         else:
             print(self, file=fp)
 
@@ -383,10 +369,6 @@ def fake_data(N):
 
 charsets = { 'ascii': '-# '
            , 'utf8': '\u2591\u2593 '
-           , 'html': ( '<div class="tile A"></div>'
-                     , '<div class="tile B"></div>'
-                     , '<div class="tile C"></div>'
-                      )
            , 'svg': 'SVG'  # hack
             }
 
