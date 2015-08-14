@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import random
 import sys
 import traceback
+from cStringIO import StringIO
 from math import ceil, sqrt
 
 
@@ -94,25 +95,32 @@ class MagnitudeMap(list):
                     self.remaining_area -= 1
 
 
-    def print_(self, fp=sys.stdout):
-        if self.charset == charsets['svg']:
-            half_W = self.W / 2
-            half_H = self.H / 2
-            rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
-            w = h = rotated_side(self.W) + rotated_side(self.H)
-            half_w = w / 2
-            half_h = h / 2
-            print('<svg width="{}px" height="{}px" '
-                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
-            print('  <g transform="translate({} {}) rotate(45 {} {})">'
-                  .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
-            for uid, x, y, (w, h) in self.shapes:
-                print('    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                      .format(uid, x+self.half_alley, y+self.half_alley, w-self.alley_width, h-self.alley_width), file=fp)
-            print('  </g>', file=fp)
-            print('</svg>', file=fp)
-        else:
-            print(self, file=fp)
+    def to_svg(self):
+        half_W = self.W / 2
+        half_H = self.H / 2
+        rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
+        w = h = rotated_side(self.W) + rotated_side(self.H)
+        half_w = w / 2
+        half_h = h / 2
+
+        fp = StringIO()
+        print('<svg width="{}px" height="{}px" '
+              'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
+        print('  <g transform="translate({} {}) rotate(45 {} {})">'
+              .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
+        for uid, x, y, (w, h) in self.shapes:
+            print( '    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
+                   .format( uid
+                          , x+self.half_alley
+                          , y+self.half_alley
+                          , w-self.alley_width
+                          , h-self.alley_width
+                           )
+                 , file=fp
+                  )
+        print('  </g>', file=fp)
+        print('</svg>', file=fp)
+        return fp.getvalue()
 
 
     def find_starting_corner(self):
@@ -391,7 +399,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
         blocks.append(fill_one(charset, canvas_size, magnitudes, alley_width, building_min))
     for i, m in enumerate([big] + blocks):
         fp = open('output/map-{}.svg'.format(i), 'w+')
-        m.print_(fp=fp)
+        print(m.to_svg(), file=fp)
 
 
 def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
