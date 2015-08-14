@@ -77,6 +77,23 @@ class MagnitudeMap(list):
     def __str__(self):
         return unicode(self).encode('UTF-8')
 
+    def to_svg(self, id='', offset_x=0, offset_y=0):
+        fp = StringIO()
+        print('    <svg id="{}" x="{}" y="{}" '
+              'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
+        for uid, x, y, (w, h) in self.shapes:
+            print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
+                   .format( uid
+                          , x+self.half_alley
+                          , y+self.half_alley
+                          , w-self.alley_width
+                          , h-self.alley_width
+                           )
+                 , file=fp
+                  )
+        print('    </svg>', file=fp)
+        return fp.getvalue()
+
     def get_shape(self, uid):
         for candidate, x, y, (w, h) in self.shapes:
             if candidate == uid:
@@ -361,7 +378,8 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, 'the whole thing', canvas_size, big, alley_width * 4, building_min)
+    big = fill_one(charset, 'the whole thing', canvas_size, big, alley_width * 20, building_min)
+    print(big.to_svg(), file=open('output/big.svg', 'w+'))
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
@@ -389,18 +407,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
     for (uid, x, y, shape), block in zip(big.shapes, blocks):
-        print('    <svg x="{}" y="{}">'.format(x, y), file=fp)
-        for uid, x, y, (w, h) in block.shapes:
-            print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                   .format( uid
-                          , x+block.half_alley
-                          , y+block.half_alley
-                          , w-block.alley_width
-                          , h-block.alley_width
-                           )
-                 , file=fp
-                  )
-        print('    </svg>', file=fp)
+        print(block.to_svg(uid, x, y), file=fp)
 
     print('  </g>', file=fp)
     print('</svg>', file=fp)
