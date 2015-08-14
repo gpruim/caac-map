@@ -1,66 +1,53 @@
-<svg width="1088px" height="1088px" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(288.0 32.0) rotate(45 256.0 512.0)">
-    <rect id="0" x="8px" y="8px" width="51px" height="230px" />
-    <rect id="1" x="67px" y="8px" width="112px" height="38px" />
-    <rect id="2" x="187px" y="8px" width="144px" height="38px" />
-    <rect id="3" x="339px" y="8px" width="165px" height="38px" />
-    <rect id="4" x="67px" y="54px" width="112px" height="44px" />
-    <rect id="5" x="187px" y="54px" width="144px" height="75px" />
-    <rect id="6" x="339px" y="54px" width="35px" height="24px" />
-    <rect id="7" x="382px" y="54px" width="122px" height="51px" />
-    <rect id="8" x="339px" y="86px" width="35px" height="204px" />
-    <rect id="9" x="67px" y="106px" width="52px" height="132px" />
-    <rect id="10" x="127px" y="106px" width="52px" height="132px" />
-    <rect id="11" x="382px" y="113px" width="122px" height="78px" />
-    <rect id="12" x="187px" y="137px" width="144px" height="70px" />
-    <rect id="13" x="382px" y="199px" width="122px" height="91px" />
-    <rect id="14" x="187px" y="215px" width="144px" height="65px" />
-    <rect id="15" x="8px" y="246px" width="171px" height="58px" />
-    <rect id="16" x="187px" y="288px" width="144px" height="70px" />
-    <rect id="17" x="339px" y="298px" width="165px" height="60px" />
-    <rect id="18" x="8px" y="312px" width="171px" height="50px" />
-    <rect id="19" x="187px" y="366px" width="144px" height="74px" />
-    <rect id="20" x="339px" y="366px" width="165px" height="28px" />
-    <rect id="21" x="8px" y="370px" width="171px" height="58px" />
-    <rect id="22" x="339px" y="402px" width="165px" height="38px" />
-    <rect id="23" x="8px" y="436px" width="171px" height="70px" />
-    <rect id="24" x="187px" y="448px" width="87px" height="58px" />
-    <rect id="25" x="282px" y="448px" width="49px" height="58px" />
-    <rect id="26" x="339px" y="448px" width="165px" height="58px" />
-    <rect id="27" x="8px" y="514px" width="171px" height="67px" />
-    <rect id="28" x="187px" y="514px" width="87px" height="67px" />
-    <rect id="29" x="282px" y="514px" width="49px" height="67px" />
-    <rect id="30" x="339px" y="514px" width="19px" height="44px" />
-    <rect id="31" x="366px" y="514px" width="46px" height="44px" />
-    <rect id="32" x="420px" y="514px" width="84px" height="22px" />
-    <rect id="33" x="420px" y="544px" width="84px" height="69px" />
-    <rect id="34" x="339px" y="566px" width="73px" height="53px" />
-    <rect id="35" x="8px" y="589px" width="171px" height="55px" />
-    <rect id="36" x="187px" y="589px" width="24px" height="36px" />
-    <rect id="37" x="219px" y="589px" width="112px" height="36px" />
-    <rect id="38" x="420px" y="621px" width="84px" height="71px" />
-    <rect id="39" x="339px" y="627px" width="73px" height="99px" />
-    <rect id="40" x="187px" y="633px" width="24px" height="105px" />
-    <rect id="41" x="219px" y="633px" width="112px" height="105px" />
-    <rect id="42" x="8px" y="652px" width="103px" height="36px" />
-    <rect id="43" x="119px" y="652px" width="60px" height="179px" />
-    <rect id="44" x="8px" y="696px" width="103px" height="49px" />
-    <rect id="45" x="420px" y="700px" width="84px" height="26px" />
-    <rect id="46" x="339px" y="734px" width="165px" height="46px" />
-    <rect id="47" x="187px" y="746px" width="24px" height="85px" />
-    <rect id="48" x="219px" y="746px" width="112px" height="34px" />
-    <rect id="49" x="8px" y="753px" width="103px" height="122px" />
-    <rect id="50" x="219px" y="788px" width="112px" height="43px" />
-    <rect id="51" x="339px" y="788px" width="165px" height="43px" />
-    <rect id="52" x="119px" y="839px" width="92px" height="177px" />
-    <rect id="53" x="219px" y="839px" width="46px" height="177px" />
-    <rect id="54" x="273px" y="839px" width="58px" height="53px" />
-    <rect id="55" x="339px" y="839px" width="58px" height="53px" />
-    <rect id="56" x="405px" y="839px" width="99px" height="53px" />
-    <rect id="57" x="8px" y="883px" width="103px" height="39px" />
-    <rect id="58" x="273px" y="900px" width="124px" height="116px" />
-    <rect id="59" x="405px" y="900px" width="19px" height="116px" />
-    <rect id="60" x="432px" y="900px" width="72px" height="116px" />
-    <rect id="61" x="8px" y="930px" width="103px" height="86px" />
+<svg width="182px" height="182px" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(27.0 27.0) rotate(45 64.0 64.0)">
+    <svg x="4" y="4">
+      <rect id="0" x="2px" y="2px" width="6px" height="7px" />
+      <rect id="1" x="10px" y="2px" width="21px" height="7px" />
+      <rect id="2" x="2px" y="11px" width="16px" height="18px" />
+      <rect id="3" x="20px" y="11px" width="11px" height="4px" />
+      <rect id="4" x="20px" y="17px" width="11px" height="12px" />
+    </svg>
+    <svg x="37" y="4">
+      <rect id="0" x="2px" y="2px" width="4px" height="19px" />
+      <rect id="1" x="8px" y="2px" width="7px" height="19px" />
+      <rect id="2" x="17px" y="2px" width="10px" height="19px" />
+      <rect id="3" x="29px" y="2px" width="27px" height="19px" />
+      <rect id="4" x="58px" y="2px" width="27px" height="19px" />
+    </svg>
+    <svg x="37" y="27">
+      <rect id="0" x="2px" y="2px" width="17px" height="14px" />
+      <rect id="1" x="2px" y="18px" width="17px" height="22px" />
+      <rect id="2" x="2px" y="42px" width="17px" height="22px" />
+      <rect id="3" x="2px" y="66px" width="17px" height="12px" />
+      <rect id="4" x="2px" y="80px" width="17px" height="15px" />
+    </svg>
+    <svg x="58" y="27">
+      <rect id="0" x="2px" y="2px" width="15px" height="19px" />
+      <rect id="1" x="19px" y="2px" width="5px" height="4px" />
+      <rect id="2" x="26px" y="2px" width="16px" height="19px" />
+      <rect id="3" x="44px" y="2px" width="20px" height="19px" />
+      <rect id="4" x="19px" y="8px" width="5px" height="13px" />
+    </svg>
+    <svg x="4" y="35">
+      <rect id="0" x="2px" y="2px" width="29px" height="13px" />
+      <rect id="1" x="2px" y="17px" width="29px" height="8px" />
+      <rect id="2" x="2px" y="27px" width="29px" height="19px" />
+      <rect id="3" x="2px" y="48px" width="10px" height="39px" />
+      <rect id="4" x="14px" y="48px" width="17px" height="39px" />
+    </svg>
+    <svg x="58" y="50">
+      <rect id="0" x="2px" y="2px" width="16px" height="28px" />
+      <rect id="1" x="20px" y="2px" width="4px" height="11px" />
+      <rect id="2" x="26px" y="2px" width="38px" height="11px" />
+      <rect id="3" x="20px" y="15px" width="4px" height="15px" />
+      <rect id="4" x="26px" y="15px" width="38px" height="15px" />
+    </svg>
+    <svg x="58" y="82">
+      <rect id="0" x="2px" y="2px" width="12px" height="38px" />
+      <rect id="1" x="16px" y="2px" width="48px" height="9px" />
+      <rect id="2" x="16px" y="13px" width="8px" height="27px" />
+      <rect id="3" x="26px" y="13px" width="38px" height="14px" />
+      <rect id="4" x="26px" y="29px" width="38px" height="11px" />
+    </svg>
   </g>
 </svg>

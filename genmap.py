@@ -95,34 +95,6 @@ class MagnitudeMap(list):
                     self.remaining_area -= 1
 
 
-    def to_svg(self):
-        half_W = self.W / 2
-        half_H = self.H / 2
-        rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
-        w = h = rotated_side(self.W) + rotated_side(self.H)
-        half_w = w / 2
-        half_h = h / 2
-
-        fp = StringIO()
-        print('<svg width="{}px" height="{}px" '
-              'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
-        print('  <g transform="translate({} {}) rotate(45 {} {})">'
-              .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
-        for uid, x, y, (w, h) in self.shapes:
-            print( '    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                   .format( uid
-                          , x+self.half_alley
-                          , y+self.half_alley
-                          , w-self.alley_width
-                          , h-self.alley_width
-                           )
-                 , file=fp
-                  )
-        print('  </g>', file=fp)
-        print('</svg>', file=fp)
-        return fp.getvalue()
-
-
     def find_starting_corner(self):
         x = y = 0
         while 1:
@@ -397,9 +369,41 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
         err()
         x, y, canvas_size = big.get_shape(name)
         blocks.append(fill_one(charset, canvas_size, magnitudes, alley_width, building_min))
-    for i, m in enumerate([big] + blocks):
-        fp = open('output/map-{}.svg'.format(i), 'w+')
-        print(m.to_svg(), file=fp)
+
+
+    # Generate a combined SVG.
+    # ========================
+
+    half_W = big.W / 2
+    half_H = big.H / 2
+    rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
+    w = h = rotated_side(big.W) + rotated_side(big.H)
+    half_w = w / 2
+    half_h = h / 2
+
+    fp = open('output/map.svg', 'w+')
+
+    print('<svg width="{}px" height="{}px" '
+          'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
+    print('  <g transform="translate({} {}) rotate(45 {} {})">'
+          .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
+
+    for (uid, x, y, shape), block in zip(big.shapes, blocks):
+        print('    <svg x="{}" y="{}">'.format(x, y), file=fp)
+        for uid, x, y, (w, h) in block.shapes:
+            print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
+                   .format( uid
+                          , x+block.half_alley
+                          , y+block.half_alley
+                          , w-block.alley_width
+                          , h-block.alley_width
+                           )
+                 , file=fp
+                  )
+        print('    </svg>', file=fp)
+
+    print('  </g>', file=fp)
+    print('</svg>', file=fp)
 
 
 def fill_one(charset, canvas_size, magnitudes, alley_width, building_min):
