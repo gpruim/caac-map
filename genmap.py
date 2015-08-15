@@ -4,12 +4,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import random
 import sys
 import traceback
+from cStringIO import StringIO
 from math import ceil, sqrt
 
 
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
+class UnknownShape(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -32,11 +34,11 @@ class AlreadyPlaced(TilePlacementError):
 class MagnitudeMap(list):
 
     A = '-' # Alley
-    B = '#' # Block/Building
+    B = '#' # Building
     C = ' ' # Canvas
 
-    def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2, block_min=4,
-            aspect_min=0.2):
+    def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2,
+            building_min=4, aspect_min=0.2):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -47,7 +49,7 @@ class MagnitudeMap(list):
         self.charset = charset
         self.A, self.B, self.C = charset
         self.half_alley = alley_width // 2
-        self.shape_min = block_min + alley_width
+        self.shape_min = building_min + alley_width
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
         self.shapes = []
@@ -74,6 +76,30 @@ class MagnitudeMap(list):
 
     def __str__(self):
         return unicode(self).encode('UTF-8')
+
+    def to_svg(self, id='', offset_x=0, offset_y=0):
+        fp = StringIO()
+        print('    <svg id="{}" x="{}" y="{}" '
+              'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
+        for uid, x, y, (w, h) in self.shapes:
+            print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
+                   .format( uid
+                          , x+self.half_alley
+                          , y+self.half_alley
+                          , w-self.alley_width
+                          , h-self.alley_width
+                           )
+                 , file=fp
+                  )
+        print('    </svg>', file=fp)
+        return fp.getvalue()
+
+    def get_shape(self, uid):
+        for candidate, x, y, (w, h) in self.shapes:
+            if candidate == uid:
+                return x, y, (w, h)
+        else:
+            raise UnknownShape(uid)
 
 
     def load(self, u):
@@ -340,26 +366,71 @@ def fake_data(N):
 
 charsets = { 'ascii': '-# '
            , 'utf8': '\u2591\u2593 '
-           , 'html': ( '<div class="tile A"></div>'
-                     , '<div class="tile B"></div>'
-                     , '<div class="tile C"></div>'
-                      )
            , 'svg': 'SVG'  # hack
             }
 
-def main(magnitudes, charset, ntries, width, height, alley_width, block_min):
+
+def err(*a, **kw):
+    print(file=sys.stderr, *a, **kw)
+
+
+def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
-    nmagnitudes = len(magnitudes)
-    smagnitudes = sum([m[1] for m in magnitudes])
-    err = lambda *a, **kw: print(file=sys.stderr, *a, **kw)
+    street_width = alley_width * 4
+    offset = street_width - alley_width
+    big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
+    big = fill_one(charset, 'the whole thing', canvas_size, big, street_width, building_min)
+    print(big.to_svg(), file=open('output/big.svg', 'w+'))
+    blocks = []
+    for name, magnitudes in magnitudeses.items():
+        err()
+        err(name, '-' * (80 - len(name) - 1))
+        err()
+        x, y, (w, h) = big.get_shape(name)
+        canvas_size = (w - offset, h - offset)
+        blocks.append(fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min))
 
-    for i in range(ntries):
+
+    # Generate a combined SVG.
+    # ========================
+
+    half_W = big.W / 2
+    half_H = big.H / 2
+    rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
+    w = h = rotated_side(big.W) + rotated_side(big.H)
+    half_w = w / 2
+    half_h = h / 2
+
+    fp = open('output/map.svg', 'w+')
+
+    print('<svg width="{}px" height="{}px" '
+          'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
+    print('  <g transform="translate({} {}) rotate(45 {} {})">'
+          .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
+
+    offset = street_width // 2
+    for (uid, x, y, shape), block in zip(big.shapes, blocks):
+        print(block.to_svg(uid, x + offset, y + offset), file=fp)
+
+    print('  </g>', file=fp)
+    print('</svg>', file=fp)
+
+
+def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min):
+    i = 0
+    while 1:
+        i += 1
         err('Iteration:', i)
+
+        magnitudes = [(uid, random.randint(1, 10)) for uid, mag in magnitudes] # Monkeys!
+        nmagnitudes = len(magnitudes)
+        smagnitudes = sum([m[1] for m in magnitudes])
+
         nplaced = 0
         nremaining = nmagnitudes
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
-                         alley_width=alley_width, block_min=block_min)
+                         alley_width=alley_width, building_min=building_min)
         try:
             for uid, magnitude in magnitudes:
                 m.add(uid, magnitude)
@@ -371,7 +442,7 @@ def main(magnitudes, charset, ntries, width, height, alley_width, block_min):
             tb = ''
 
         err()
-        err("Placed {} out of {} magnitudes.".format(nplaced, len(magnitudes)))
+        err("Placed {} out of {} magnitudes for {}.".format(nplaced, len(magnitudes), name))
         err( "Sum of remaining magnitudes: {} / {} ({:.1f}%)".format(
              m.remaining_magnitudes
            , m.sum_of_magnitudes
@@ -386,65 +457,36 @@ def main(magnitudes, charset, ntries, width, height, alley_width, block_min):
             err()
             err(tb)
 
-        if m.charset == charsets['svg']:
-            half_W = m.W / 2
-            half_H = m.H / 2
-            rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
-            w = h = rotated_side(m.W) + rotated_side(m.H)
-            half_w = w / 2
-            half_h = h / 2
-            print('<svg width="{}px" height="{}px" '
-                  'xmlns="http://www.w3.org/2000/svg">'.format(w, h))
-            print('  <g transform="translate({} {}) rotate(45 {} {})">'
-                  .format(half_w - half_W, half_h - half_H, half_W, half_H))
-            for uid, x, y, (w, h) in m.shapes:
-                print('    <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                      .format(uid, x+m.half_alley, y+m.half_alley, w-m.alley_width, h-m.alley_width))
-            print('  </g>')
-            print('</svg>')
-        elif m.charset == charsets['html']:
-            print("""
-            <style>
-                body {{ margin: 128px; padding: 0; background: #CCC; }}
-                div.wrapper {{ width: {0}px; height: {1}px; margin: auto; transform: rotate(45deg); }}
-                div.tile {{ width:4px; height: 4px; float: left; }}
-                div.A {{ background: #FFFFFF; }}
-                div.B {{ background: #0099FF; }}
-                div.C {{ background: transparent; }}
-            </style>
-            <div class="wrapper">
-            """.format(m.W*4, m.H*4, (m.H*4) // 2))
-            print(m)
-            print("</div>")
-        else:
-            print(m)
-        break
+        if nremaining == 0 and m.remaining_area == 0:
+            break
+    return m
 
 
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Generate a CaaC map.')
-    parser.add_argument('input', help='the name of an input file in json format, or a number of '
-                                      'fake magnitudes to generate')
+    parser.add_argument('input', help='the name of an input file in json format, or a number n to '
+                                      'seed the generation of {n/2 .. n} fake magnitudes each for '
+                                      'seven blocks')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
-    parser.add_argument('--ntries', '-n', default=1, type=int,
-                        help='a number of tries to find a fit')
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
     parser.add_argument('--height', '-H', default=128, type=int, help='the height of the canvas')
     parser.add_argument('--alley_width', '-a', default=2, type=int, help='the width of the alleys')
-    parser.add_argument('--block_min', '-b', default=4, type=int,
+    parser.add_argument('--building_min', '-b', default=4, type=int,
                         help='the minimum width of the blocks')
 
     args = parser.parse_args()
 
     # Convert `input` into `magnitudes`
     if args.input.isdigit():
-        magnitudes = list(enumerate(fake_data(int(args.input))))
+        magnitudes = {name: list(enumerate(fake_data(int(args.input)))) for name in 'abcdefg'}
     else:
         import json
-        magnitudes = [(rec['id'], rec['magnitude']) for rec in json.load(open(args.input))]
+        blocks = json.load(open(args.input))
+        xrec = lambda rec: [(rec['uuid'], int(rec['duration'])) for rec in rec]
+        magnitudes = {name: xrec(rec) for name, rec in blocks.items()}
     args.__dict__.pop('input')
 
     main(magnitudes, **args.__dict__)

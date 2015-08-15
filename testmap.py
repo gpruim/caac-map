@@ -157,7 +157,7 @@ def test_dta_varies_with_canvas_size():
     assert m.determine_target_area(10) == 98
 
 def test_dta_enforces_lower_bound():
-    m = genmap.MagnitudeMap(canvas_size=(14, 14), sum_of_magnitudes=8, block_min=4)
+    m = genmap.MagnitudeMap(canvas_size=(14, 14), sum_of_magnitudes=8, building_min=4)
     with raises(genmap.TargetAreaTooSmall):
         m.determine_target_area(1)
     m.determine_target_area(2)
@@ -183,7 +183,7 @@ def test_grb_stops_at_first_hard_bound():
     assert m.get_right_bounds(1, 1) == [6]
 
 def test_grb_finds_soft_and_hard_bounds():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 ----------------
@@ -196,7 +196,7 @@ def test_grb_finds_soft_and_hard_bounds():
     assert m.get_right_bounds(1, 4) == [7, 15]
 
 def test_grb_finds_soft_bound_with_some_empty_canvas():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 -------        -
@@ -209,7 +209,7 @@ def test_grb_finds_soft_bound_with_some_empty_canvas():
     assert m.get_right_bounds(1, 4) == [7, 15]
 
 def test_grb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
-    m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, building_min=1)
     m.load("""\
 ------------------------
 ------------------------
@@ -253,7 +253,7 @@ def test_gbb_stops_at_first_hard_bound():
     assert m.get_bottom_bounds(1, 1) == [4]
 
 def test_gbb_finds_soft_and_hard_bounds():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 -------        -
@@ -266,7 +266,7 @@ def test_gbb_finds_soft_and_hard_bounds():
     assert m.get_bottom_bounds(7, 1) == [4, 7]
 
 def test_gbb_finds_soft_bound_with_some_empty_canvas():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 -------        -
@@ -279,7 +279,7 @@ def test_gbb_finds_soft_bound_with_some_empty_canvas():
     assert m.get_bottom_bounds(7, 1) == [4, 7]
 
 def test_gbb_works_with_different_alley_width_shhhhhh_dont_tell_tim():
-    m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(24, 18), alley_width=4, building_min=1)
     m.load("""\
 ------------------------
 ------------------------
@@ -319,12 +319,12 @@ def test_bsf_rejects_when_too_small():
     assert not m.bad_shape_for((6, 6), 1, 1)
 
 def test_bsf_rejects_when_too_skinny():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1, aspect_min=0.3)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1, aspect_min=0.3)
     assert m.too_skinny(14, 3)
     assert m.bad_shape_for((14, 3), 1, 1)
 
 def test_bsf_rejects_when_not_enough_room():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 -              -
@@ -346,7 +346,7 @@ def test_bsf_rejects_when_not_enough_room():
     assert m.bad_shape_for((15, 3), 1, 1)
 
 def test_bsf_doesnt_ignore_intervening_shape_when_looking_for_enough_room():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 -              -
@@ -368,26 +368,26 @@ def test_gss_gets_snapped_shapes():
     assert m.get_snapped_shapes(1, 1, 84) == [(14, 6)]
 
 def test_gss_gets_snapped_shape_for_half_area():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (7, 6)]
 
-def test_gss_respects_block_min():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+def test_gss_respects_building_min():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (7, 6)]
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=2)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=2)
     assert m.get_snapped_shapes(1, 1, 42) == [(7, 6)]
 
-def test_gss_respects_block_min_again():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+def test_gss_respects_building_min_again():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 9, shape_choice=1)
     assert m.get_snapped_shapes(12, 1, 18) == [(3, 6)]
 
 def test_gss_gets_snapped_shape_for_half_area_on_larger_canvas():
-    m = genmap.MagnitudeMap(canvas_size=(16, 12), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 12), building_min=1)
     assert m.get_snapped_shapes(1, 1, 42) == [(14, 3), (4, 10)]
 
 def test_gss_exhibits_pinch_prevention():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     assert m.get_snapped_shapes(1, 1, 75) == [(14, 3), (11, 6)]
     """
 
@@ -414,7 +414,7 @@ def test_gss_exhibits_pinch_prevention():
     """
 
 def test_gss_will_two_snap_to_a_soft_and_hard_bound():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), building_min=1)
     m.load("""\
 ----------------
 -------        -
@@ -502,7 +502,7 @@ def test_add_adds():
 ----------------"""
 
 def test_add_adds_a_half_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 5, shape_choice=0)
     assert unicode(m) == """\
 ----------------
@@ -515,7 +515,7 @@ def test_add_adds_a_half_magnitude():
 ----------------"""
 
 def test_add_adds_the_other_shape_for_a_half_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 5, shape_choice=1)
     assert unicode(m) == """\
 ----------------
@@ -528,7 +528,7 @@ def test_add_adds_the_other_shape_for_a_half_magnitude():
 ----------------"""
 
 def test_add_adds_a_second_magnitude():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 5, shape_choice=1)
     m.add(0, 5)
     assert unicode(m) == """\
@@ -542,7 +542,7 @@ def test_add_adds_a_second_magnitude():
 ----------------"""
 
 def test_add_adds_magnitudes_with_different_ratios():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, building_min=1)
     m.add(0, 4, shape_choice=1)
     m.add(0, 3)
     assert unicode(m) == """\
@@ -556,7 +556,7 @@ def test_add_adds_magnitudes_with_different_ratios():
 ----------------"""
 
 def test_add_exhibits_pinch_prevention():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 9, shape_choice=0)
     m.add(0, 1)
     assert unicode(m) == """\
@@ -570,7 +570,7 @@ def test_add_exhibits_pinch_prevention():
 ----------------"""
 
 def test_add_exhibits_pinch_prevention_the_other_way():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 9, shape_choice=1)
     m.add(0, 1)
     assert unicode(m) == """\
@@ -584,7 +584,7 @@ def test_add_exhibits_pinch_prevention_the_other_way():
 ----------------"""
 
 def test_add_will_two_snap_to_a_soft_and_hard_bound():
-    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=15, block_min=1)
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=15, building_min=1)
     m.load("""\
 ----------------
 -------        -
