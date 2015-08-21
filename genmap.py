@@ -377,11 +377,12 @@ def err(*a, **kw):
 def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
-    street_width = alley_width * 4
+    street_width = alley_width * 10
     offset = street_width - alley_width
     big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, 'the whole thing', canvas_size, big, street_width, building_min)
-    print(big.to_svg(), file=open('output/big.svg', 'w+'))
+    big = fill_one(charset, 'the whole thing', canvas_size, big, street_width, building_min,
+                                                                                    aspect_min=0.5)
+    print(big.to_svg(), file=open('output/big.svg', 'w+'))  # for debugging
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
@@ -417,7 +418,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     print('</svg>', file=fp)
 
 
-def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min):
+def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, **kw):
     i = 0
     while 1:
         i += 1
@@ -430,7 +431,7 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min):
         nplaced = 0
         nremaining = nmagnitudes
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
-                         alley_width=alley_width, building_min=building_min)
+                         alley_width=alley_width, building_min=building_min, **kw)
         try:
             for uid, magnitude in magnitudes:
                 m.add(uid, magnitude)
