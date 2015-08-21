@@ -374,9 +374,16 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     canvas_size = (width, height)
     street_width = alley_width * 10
     offset = street_width - alley_width
-    big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, 'the whole thing', canvas_size, big, street_width, building_min,
-                                                                                    aspect_min=0.5)
+    big = [(name, len(mags)) for name, mags in magnitudeses.items()]
+    big = fill_one( charset
+                  , 'the whole thing'
+                  , canvas_size
+                  , big
+                  , street_width
+                  , building_min
+                  , monkeys=False
+                  , aspect_min=0.5
+                   )
     print(big.to_svg(), file=open('output/big.svg', 'w+'))  # for debugging
     blocks = []
     for name, magnitudes in magnitudeses.items():
@@ -385,7 +392,14 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
         err()
         x, y, (w, h) = big.get_shape(name)
         canvas_size = (w - offset, h - offset)
-        blocks.append(fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min))
+        blocks.append((name, fill_one( charset
+                                     , name
+                                     , canvas_size
+                                     , magnitudes
+                                     , alley_width
+                                     , building_min
+                                     , monkeys=True
+                                      )))
 
 
     # Generate a combined SVG.
@@ -406,20 +420,22 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
     offset = street_width // 2
-    for (uid, (x, y, shape)), block in zip(big.shapes.items(), blocks):
+    for uid, block in blocks:
+        x, y, shape = big.shapes[uid]
         print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
     print('</svg>', file=fp)
 
 
-def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, **kw):
+def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, monkeys, **kw):
     i = 0
+    mfunc = (lambda m: random.randint(1, 10)) if monkeys else (lambda m: m)
     while 1:
         i += 1
         err('Iteration:', i)
 
-        magnitudes = [(uid, random.randint(1, 10)) for uid, mag in magnitudes] # Monkeys!
+        magnitudes = [(uid, mfunc(m)) for uid, m in magnitudes]
         nmagnitudes = len(magnitudes)
         smagnitudes = sum([m[1] for m in magnitudes])
 
