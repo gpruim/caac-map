@@ -497,7 +497,7 @@ if __name__ == '__main__':
     else:
         import json
         blocks = json.load(open(args.input))
-        xrec = lambda rec: [(rec['uuid'], int(rec['duration'])) for rec in rec]
+        xrec = lambda rec: [(rec['uuid'], int(rec['duration'])) for rec in rec.values()]
         magnitudes = {name: xrec(rec) for name, rec in blocks.items()}
     args.__dict__.pop('input')
 
