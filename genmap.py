@@ -11,7 +11,6 @@ from math import ceil, sqrt
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
-class UnknownShape(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -52,7 +51,7 @@ class MagnitudeMap(list):
         self.shape_min = building_min + alley_width
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
-        self.shapes = []
+        self.shapes = {}
 
         # Build the base map. It's surrounded by alleys.
         innerW = self.W - (self.alley_width * 2)
@@ -81,7 +80,7 @@ class MagnitudeMap(list):
         fp = StringIO()
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
-        for uid, x, y, (w, h) in self.shapes:
+        for uid, (x, y, (w, h)) in self.shapes.items():
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
                    .format( uid
                           , x+self.half_alley
@@ -95,11 +94,7 @@ class MagnitudeMap(list):
         return fp.getvalue()
 
     def get_shape(self, uid):
-        for candidate, x, y, (w, h) in self.shapes:
-            if candidate == uid:
-                return x, y, (w, h)
-        else:
-            raise UnknownShape(uid)
+        return self.shapes[uid]
 
 
     def load(self, u):
@@ -155,7 +150,7 @@ class MagnitudeMap(list):
         self.draw_shape_at(shape, x, y)
 
         # Also save it for the SVG renderer to use.
-        self.shapes.append((uid, x, y, shape))
+        self.shapes[uid] = (x, y, shape)
 
         # Decrement remaining_magnitudes.
         self.remaining_magnitudes -= magnitude
@@ -411,7 +406,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
     offset = street_width // 2
-    for (uid, x, y, shape), block in zip(big.shapes, blocks):
+    for (uid, (x, y, shape)), block in zip(big.shapes.items(), blocks):
         print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
