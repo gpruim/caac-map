@@ -485,8 +485,8 @@ if __name__ == '__main__':
                         choices=sorted(charsets.keys()))
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
     parser.add_argument('--height', '-H', default=128, type=int, help='the height of the canvas')
-    parser.add_argument('--alley_width', '-a', default=2, type=int, help='the width of the alleys')
-    parser.add_argument('--building_min', '-b', default=4, type=int,
+    parser.add_argument('--alley_width', '-a', default=6, type=int, help='the width of the alleys')
+    parser.add_argument('--building_min', '-b', default=10, type=int,
                         help='the minimum width of the blocks')
 
     args = parser.parse_args()
