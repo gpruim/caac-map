@@ -11,7 +11,6 @@ from math import ceil, sqrt
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
-class UnknownShape(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -38,7 +37,7 @@ class MagnitudeMap(list):
     C = ' ' # Canvas
 
     def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2,
-            building_min=4, aspect_min=0.2):
+            building_min=4, aspect_min=0.25):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -52,7 +51,7 @@ class MagnitudeMap(list):
         self.shape_min = building_min + alley_width
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
-        self.shapes = []
+        self.shapes = {}
 
         # Build the base map. It's surrounded by alleys.
         innerW = self.W - (self.alley_width * 2)
@@ -81,7 +80,7 @@ class MagnitudeMap(list):
         fp = StringIO()
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
-        for uid, x, y, (w, h) in self.shapes:
+        for uid, (x, y, (w, h)) in self.shapes.items():
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
                    .format( uid
                           , x+self.half_alley
@@ -95,11 +94,7 @@ class MagnitudeMap(list):
         return fp.getvalue()
 
     def get_shape(self, uid):
-        for candidate, x, y, (w, h) in self.shapes:
-            if candidate == uid:
-                return x, y, (w, h)
-        else:
-            raise UnknownShape(uid)
+        return self.shapes[uid]
 
 
     def load(self, u):
@@ -155,7 +150,7 @@ class MagnitudeMap(list):
         self.draw_shape_at(shape, x, y)
 
         # Also save it for the SVG renderer to use.
-        self.shapes.append((uid, x, y, shape))
+        self.shapes[uid] = (x, y, shape)
 
         # Decrement remaining_magnitudes.
         self.remaining_magnitudes -= magnitude
@@ -377,11 +372,19 @@ def err(*a, **kw):
 def main(magnitudeses, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
-    street_width = alley_width * 4
+    street_width = alley_width * 10
     offset = street_width - alley_width
-    big = [(name, sum([int(x[1]) for x in mags])) for name, mags in magnitudeses.items()]
-    big = fill_one(charset, 'the whole thing', canvas_size, big, street_width, building_min)
-    print(big.to_svg(), file=open('output/big.svg', 'w+'))
+    big = [(name, len(mags)) for name, mags in magnitudeses.items()]
+    big = fill_one( charset
+                  , 'the whole thing'
+                  , canvas_size
+                  , big
+                  , street_width
+                  , building_min
+                  , monkeys=False
+                  , aspect_min=0.5
+                   )
+    print(big.to_svg(), file=open('output/big.svg', 'w+'))  # for debugging
     blocks = []
     for name, magnitudes in magnitudeses.items():
         err()
@@ -389,7 +392,14 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
         err()
         x, y, (w, h) = big.get_shape(name)
         canvas_size = (w - offset, h - offset)
-        blocks.append(fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min))
+        blocks.append((name, fill_one( charset
+                                     , name
+                                     , canvas_size
+                                     , magnitudes
+                                     , alley_width
+                                     , building_min
+                                     , monkeys=True
+                                      )))
 
 
     # Generate a combined SVG.
@@ -410,27 +420,29 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
     offset = street_width // 2
-    for (uid, x, y, shape), block in zip(big.shapes, blocks):
+    for uid, block in blocks:
+        x, y, shape = big.shapes[uid]
         print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
     print('</svg>', file=fp)
 
 
-def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min):
+def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, monkeys, **kw):
     i = 0
+    mfunc = (lambda m: random.randint(3, 10)) if monkeys else (lambda m: m)
     while 1:
         i += 1
         err('Iteration:', i)
 
-        magnitudes = [(uid, random.randint(1, 10)) for uid, mag in magnitudes] # Monkeys!
+        magnitudes = [(uid, mfunc(m)) for uid, m in magnitudes]
         nmagnitudes = len(magnitudes)
         smagnitudes = sum([m[1] for m in magnitudes])
 
         nplaced = 0
         nremaining = nmagnitudes
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
-                         alley_width=alley_width, building_min=building_min)
+                         alley_width=alley_width, building_min=building_min, **kw)
         try:
             for uid, magnitude in magnitudes:
                 m.add(uid, magnitude)
