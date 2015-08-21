@@ -46,7 +46,8 @@ def fetch_resources_by_topic(worksheets):
         raw = raw.encode('utf8')  # csv can only use str
         reader = csv.reader(StringIO(raw))
         headers = reader.next()
-        resources = [dict(zip(headers, row)) for row in reader]
+        UUID = 0
+        resources = {row[UUID]: dict(zip(headers, row)) for row in reader}
         topics[topic] = resources
     return topics
 
