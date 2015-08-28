@@ -67,7 +67,7 @@ def validate_uids(topics):
     for name, topic in topics.items():
         for resource in topic.values():
             for field in ('uid', 'comes_before', 'comes_after'):
-                if not re.match(r'^[a-z-]*$', resource[field]):
+                if not re.match(r'^[a-z0-9-]*$', resource[field]):
                     bad.add((name, field, resource[field].encode('ascii', errors='replace')))
     if bad:
         print("{} bad uid(s)!".format(len(bad)))
