@@ -3,7 +3,7 @@
 
 https://developers.google.com/google-apps/spreadsheets/
 
-The result of this script is a set of JSON files in ./data/, one per sheet.
+The result of this script is a JSON file at ./output/resources.json.
 
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import csv
 import json
 import os
+import re
 import shutil
 from StringIO import StringIO
 import xml.etree.ElementTree as ET
@@ -25,6 +26,7 @@ def _get(url):
         print(response.text)
         raise SystemExit
     if 'Sign in to continue to Sheets' in response.text:
+        #open('bad.html', 'w+').write(response.content)
         print("They're asking us to sign in. Try 'File > Publish to the web ...'.")
         raise SystemExit
     return response.text
@@ -49,10 +51,24 @@ def fetch_resources_by_topic(worksheets):
         raw = raw.encode('utf8')  # csv can only use str
         reader = csv.reader(StringIO(raw))
         headers = reader.next()
-        UUID = 0
-        resources = {row[UUID]: dict(zip(headers, row)) for row in reader}
+        UID = 1
+        resources = {row[UID]: dict(zip(headers, row)) for row in reader}
         topics[topic] = resources
     return topics
+
+
+def validate_uids(topics):
+    bad = set()
+    for name, topic in topics.items():
+        for resource in topic.values():
+            for field in ('uid', 'comes_before', 'comes_after'):
+                if not re.match(r'^[a-z-]+$', resource[field]):
+                    bad.add((name, field, resource[field].encode('ascii', errors='replace')))
+    if bad:
+        print("{} bad uid(s)!".format(len(bad)))
+        for sheet, field, value in sorted(bad):
+            print(sheet, field, value)
+        raise SystemExit
 
 
 def dump_topics(topics, fspath):
@@ -63,13 +79,14 @@ def dump_topics(topics, fspath):
 def main(sheets_key, staging_filepath, final_filepath):
     worksheets = fetch_worksheets(sheets_key)
     topics = fetch_resources_by_topic(worksheets)
+    validate_uids(topics)
     dump_topics(topics, staging_filepath)
     shutil.move(staging_filepath, final_filepath)
 
 
 if __name__ == '__main__':
 
-    sheets_key = '1wZ2uz0KTkylLgo46fJ7gYYpNEKjVljoGTCjFecjZQ9c'
+    sheets_key = '10PurQxMbALCYNu7I3KfgUb2oMz4Uk5dLPZbTkdNb0ZM'
     staging = os.path.join('output', '.resources.json')
     final = os.path.join('output', 'resources.json')
 
