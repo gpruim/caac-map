@@ -24,6 +24,9 @@ def _get(url):
         print(response.status_code)
         print(response.text)
         raise SystemExit
+    if 'Sign in to continue to Sheets' in response.text:
+        print("They're asking us to sign in. Try 'File > Publish to the web ...'.")
+        raise SystemExit
     return response.text
 
 
