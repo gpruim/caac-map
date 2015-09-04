@@ -21,7 +21,7 @@ import requests
 
 def _get(url):
     print("Getting {} ...".format(url))
-    response = requests.get(url, headers={'If-Modified-Since': '0'})
+    response = requests.get(url, headers={'If-Modified-Since': 'Wed, 16 Feb 2011 13:52:26 GMT'})
     if not response.status_code == 200:
         print("Problem downloading {} ...".format(url))
         print(response.status_code)
