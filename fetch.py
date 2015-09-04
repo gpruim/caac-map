@@ -21,7 +21,7 @@ import requests
 
 def _get(url):
     print("Getting {} ...".format(url))
-    response = requests.get(url)
+    response = requests.get(url, headers={'If-Modified-Since': '0'})
     if not response.status_code == 200:
         print("Problem downloading {} ...".format(url))
         print(response.status_code)
@@ -66,7 +66,7 @@ def validate_uids(topics):
     bad = set()
     for name, topic in topics.items():
         for resource in topic.values():
-            for field in ('uid', 'comes_before', 'comes_after'):
+            for field in ('uid', 'before_this', 'after_this'):
                 if not re.match(r'^[a-z0-9-]*$', resource[field]):
                     bad.add((name, field, resource[field].encode('ascii', errors='replace')))
     if bad:
@@ -74,7 +74,7 @@ def validate_uids(topics):
         print("{:24} {:24} {:24}".format("sheet", "field", "value"))
         print("{:-<24} {:-<24} {:-<24}".format("", "", ""))
         for sheet, field, value in sorted(bad):
-            print("{:24} {:24} {:24}".format(sheet, field, value))
+            print("{:24} {:24} {:24}".format(sheet, field, repr(value)))
         raise SystemExit
 
 
