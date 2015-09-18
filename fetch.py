@@ -3,7 +3,7 @@
 
 https://developers.google.com/google-apps/spreadsheets/
 
-The result of this script is a JSON file at ./output/resources.json.
+The result of this script is a JSON file at ./output/topics.json.
 
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -124,7 +124,7 @@ def main(sheets_key, staging_filepath, final_filepath):
 if __name__ == '__main__':
 
     sheets_key = '10PurQxMbALCYNu7I3KfgUb2oMz4Uk5dLPZbTkdNb0ZM'
-    staging = os.path.join('output', '.resources.json')
-    final = os.path.join('output', 'resources.json')
+    staging = os.path.join('output', '.topics.json')
+    final = os.path.join('output', 'topics.json')
 
     main(sheets_key, staging, final)
