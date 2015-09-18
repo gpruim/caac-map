@@ -13,6 +13,7 @@ import json
 import os
 import re
 import shutil
+from collections import defaultdict
 from StringIO import StringIO
 import xml.etree.ElementTree as ET
 
@@ -21,7 +22,7 @@ import requests
 
 def _get(url):
     print("Getting {} ...".format(url))
-    response = requests.get(url, headers={'If-Modified-Since': '0'})
+    response = requests.get(url, headers={'If-Modified-Since': 'Wed, 16 Feb 2011 13:52:26 GMT'})
     if not response.status_code == 200:
         print("Problem downloading {} ...".format(url))
         print(response.status_code)
@@ -50,25 +51,54 @@ def fetch_worksheets(sheet_key):
 
 
 def fetch_resources_by_topic(worksheets):
+    """Smooth out into a nice JSON-able data structure.
+
+    { "deadbeef": { "id": "deadbeef"
+                  , "subtopics": { "fa1afe1": { "id": "fa1afe1"
+                                              , "topic_id": "deadbeef"
+                                              , "resources": { "fadedfad": { "id": "fadedfad"
+                                                                           , "topic_id": "deadbeef"
+                                                                           , "subtopic_id": "fa1afe1"
+                                                                           , "etc": "stuff"
+                                                                            }
+                                                              }
+                                               }
+                   }
+    """
     topics = {}
-    for topic, csvurl in worksheets:
+    for topic_id, csvurl in worksheets:
+        topic = {}
+        topic['id'] = topic_id
+        topic['subtopics'] = subtopics = defaultdict(lambda: defaultdict(dict))
+
         raw = _get(csvurl)
-        raw = raw.encode('utf8')  # csv can only use str
+        raw = raw.encode('utf8')  # the csv module can only use str
         reader = csv.reader(StringIO(raw))
         headers = reader.next()
-        UID = 0
-        resources = {row[UID]: dict(zip(headers, row)) for row in reader}
-        topics[topic] = resources
+
+        for row in reader:
+            resource = dict(zip(headers, row))
+            resource['id'] = resource['uid']
+            resource['topic_id'] = topic_id
+            resource['subtopic_id'] = resource['subtopic_id']
+
+            subtopic = subtopics[resource['subtopic_id']]
+            subtopic['id'] = resource['subtopic_id']
+            subtopic['topic_id'] = topic_id
+            subtopic['resources'][resource['id']] = resource
+
+        topics[topic_id] = topic
     return topics
 
 
 def validate_uids(topics):
     bad = set()
     for name, topic in topics.items():
-        for resource in topic.values():
-            for field in ('uid', 'before_this', 'after_this'):
-                if not re.match(r'^[a-z0-9-]*$', resource[field]):
-                    bad.add((name, field, resource[field].encode('ascii', errors='replace')))
+        for subtopic in topic['subtopics'].values():
+            for resource in subtopic['resources'].values():
+                for field in ('uid', 'before_this', 'after_this'):
+                    if '\n' in resource[field] or not re.match(r'^[a-z0-9-]*$', resource[field]):
+                        bad.add((name, field, resource[field].encode('ascii', errors='replace')))
     if bad:
         print("{} bad uid(s)!".format(len(bad)))
         print("{:24} {:24} {:24}".format("sheet", "field", "value"))
