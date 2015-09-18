@@ -108,7 +108,7 @@ def fetch_resources_by_topic(worksheets):
         # Convert dags to the format that the JavaScript expects.
         for subtopic in topic['subtopics'].values():
             dag = subtopic['dag']
-            subtopic['dag'] = { "names": dag.graph.keys()
+            subtopic['dag'] = { "names": dag.topological_sort()
                               , "vertices": \
                                       {k: {"incomingNames": list(dag.graph[k])} for k in dag.graph}
                                }
