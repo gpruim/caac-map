@@ -493,12 +493,17 @@ if __name__ == '__main__':
 
     # Convert `input` into `magnitudes`
     if args.input.isdigit():
-        magnitudes = {name: list(enumerate(fake_data(int(args.input)))) for name in 'abcdefg'}
+        # XXX Does this still work?
+        magnitudeses = {name: list(enumerate(fake_data(int(args.input)))) for name in 'abcdefg'}
     else:
         import json
-        blocks = json.load(open(args.input))
-        xrec = lambda rec: [(rec['uid'], int(rec['duration'])) for rec in rec.values()]
-        magnitudes = {name: xrec(rec) for name, rec in blocks.items()}
+        topics = json.load(open(args.input))
+        magnitudeses = {}
+        for topic_id, topic in topics.items():
+            magnitudeses[topic_id] = []
+            for subtopic_id, subtopic in topic['subtopics'].items():
+                for resource_id, resource in subtopic['resources'].items():
+                    magnitudeses[topic_id].append((resource_id, resource.get('duration', 1)))
     args.__dict__.pop('input')
 
-    main(magnitudes, **args.__dict__)
+    main(magnitudeses, **args.__dict__)
