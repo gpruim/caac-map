@@ -3,7 +3,7 @@
 
 https://developers.google.com/google-apps/spreadsheets/
 
-The result of this script is a JSON file at ./output/resources.json.
+The result of this script is a JSON file at ./output/topics.json.
 
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -15,6 +15,7 @@ import re
 import shutil
 from collections import defaultdict
 from StringIO import StringIO
+from dag import DAG
 import xml.etree.ElementTree as ET
 
 import requests
@@ -56,6 +57,9 @@ def fetch_resources_by_topic(worksheets):
     { "deadbeef": { "id": "deadbeef"
                   , "subtopics": { "fa1afe1": { "id": "fa1afe1"
                                               , "topic_id": "deadbeef"
+                                              , "dag": { "names": ["fadedfad"]
+                                                       , "vertices": [{"incomingNames": "feeddeaf"}]
+                                                        }
                                               , "resources": { "fadedfad": { "id": "fadedfad"
                                                                            , "topic_id": "deadbeef"
                                                                            , "subtopic_id": "fa1afe1"
@@ -80,12 +84,34 @@ def fetch_resources_by_topic(worksheets):
             resource = dict(zip(headers, row))
             resource['id'] = resource['uid']
             resource['topic_id'] = topic_id
-            resource['subtopic_id'] = resource['subtopic_id']
 
             subtopic = subtopics[resource['subtopic_id']]
-            subtopic['id'] = resource['subtopic_id']
-            subtopic['topic_id'] = topic_id
             subtopic['resources'][resource['id']] = resource
+
+            if 'dag' not in subtopic:
+                # First time seeing it. Populate!
+                subtopic['dag'] = DAG()
+                subtopic['id'] = resource['subtopic_id']
+                subtopic['topic_id'] = topic_id
+
+            # Relax the py-dag API to be more like the js DAG we had.
+            dag = subtopic['dag']
+            add_node = lambda node: dag.add_node(node) if node and node not in dag.graph else None
+            add_edge = lambda a,b: dag.add_edge(a,b) if a and b and a != b else None
+
+            add_node(resource['id'])
+            add_node(resource['before_this'])
+            add_node(resource['after_this'])
+            add_edge(resource['before_this'], resource['id'])
+            add_edge(resource['id'], resource['after_this'])
+
+        # Convert dags to the format that the JavaScript expects.
+        for subtopic in topic['subtopics'].values():
+            dag = subtopic['dag']
+            subtopic['dag'] = { "names": dag.graph.keys()
+                              , "vertices": \
+                                      {k: {"incomingNames": list(dag.graph[k])} for k in dag.graph}
+                               }
 
         topics[topic_id] = topic
     return topics
@@ -124,7 +150,7 @@ def main(sheets_key, staging_filepath, final_filepath):
 if __name__ == '__main__':
 
     sheets_key = '10PurQxMbALCYNu7I3KfgUb2oMz4Uk5dLPZbTkdNb0ZM'
-    staging = os.path.join('output', '.resources.json')
-    final = os.path.join('output', 'resources.json')
+    staging = os.path.join('output', '.topics.json')
+    final = os.path.join('output', 'topics.json')
 
     main(sheets_key, staging, final)
