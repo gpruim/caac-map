@@ -75,7 +75,7 @@ class MagnitudeMap(list):
     def __bytes__(self):
         return str(self).encode('UTF-8')
 
-    def to_svg(self, id='', offset_x=0, offset_y=0):
+    def to_svg(self, id='', offset_x=0, offset_y=0, pathways=None):
         fp = io.StringIO()
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
@@ -368,12 +368,12 @@ def err(*a, **kw):
     print(file=sys.stderr, *a, **kw)
 
 
-def main(magnitudeses, charset, width, height, alley_width, building_min):
+def main(topics, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     street_width = alley_width * 10
     offset = street_width - alley_width
-    big = [(name, len(mags)) for name, mags in magnitudeses.items()]
+    big = [(topic_id, len(topic['subtopics'])) for topic_id, topic in topics.items()]
     big = fill_one( charset
                   , 'the whole thing'
                   , canvas_size
@@ -384,22 +384,27 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
                   , aspect_min=0.5
                    )
     print(big.to_svg(), file=open('output/big.svg', 'w+'))  # for debugging
+
     blocks = []
-    for name, magnitudes in magnitudeses.items():
+    for topic_id, topic in topics.items():
+        small = []
+        for subtopic in topic['subtopics'].values():
+            for resource in subtopic['resources'].values():
+                small.append((resource['id'], None))
         err()
-        err(name, '-' * (80 - len(name) - 1))
+        err(topic_id, '-' * (80 - len(topic_id) - 1))
         err()
-        x, y, (w, h) = big.get_shape(name)
+        x, y, (w, h) = big.get_shape(topic_id)
         canvas_size = (w - offset, h - offset)
-        blocks.append((name, fill_one( charset
-                                     , name
-                                     , canvas_size
-                                     , magnitudes
-                                     , alley_width
-                                     , building_min
-                                     , aspect_min=0.2
-                                     , monkeys=True
-                                      )))
+        blocks.append((topic_id, fill_one( charset
+                                         , topic_id
+                                         , canvas_size
+                                         , small
+                                         , alley_width
+                                         , building_min
+                                         , aspect_min=0.2
+                                         , monkeys=True
+                                          )))
 
 
     # Generate a combined SVG.
@@ -422,7 +427,9 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     offset = street_width // 2
     for uid, block in blocks:
         x, y, shape = big.shapes[uid]
-        print(block.to_svg(uid, x + offset, y + offset), file=fp)
+        subtopics = topics[uid]['subtopics'].values()
+        pathways = {s['id']: s['dag']['names'] for s in subtopics}
+        print(block.to_svg(uid, x + offset, y + offset, pathways), file=fp)
 
     print('  </g>', file=fp)
     print('</svg>', file=fp)
@@ -475,12 +482,10 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, 
 
 
 if __name__ == '__main__':
-    import argparse
+    import argparse, json
 
     parser = argparse.ArgumentParser(description='Generate a CaaC map.')
-    parser.add_argument('input', help='the name of an input file in json format, or a number n to '
-                                      'seed the generation of {n/2 .. n} fake magnitudes each for '
-                                      'seven blocks')
+    parser.add_argument('input', help='the name of an input file in json format')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
@@ -490,20 +495,6 @@ if __name__ == '__main__':
                         help='the minimum width of the blocks')
 
     args = parser.parse_args()
-
-    # Convert `input` into `magnitudes`
-    if args.input.isdigit():
-        # XXX Does this still work?
-        magnitudeses = {name: list(enumerate(fake_data(int(args.input)))) for name in 'abcdefg'}
-    else:
-        import json
-        topics = json.load(open(args.input))
-        magnitudeses = {}
-        for topic_id, topic in topics.items():
-            magnitudeses[topic_id] = []
-            for subtopic_id, subtopic in topic['subtopics'].items():
-                for resource_id, resource in subtopic['resources'].items():
-                    magnitudeses[topic_id].append((resource_id, resource.get('duration', 1)))
+    topics = json.load(open(args.input))
     args.__dict__.pop('input')
-
-    main(magnitudeses, **args.__dict__)
+    main(topics, **args.__dict__)
