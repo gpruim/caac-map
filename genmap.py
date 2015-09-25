@@ -36,7 +36,7 @@ class MagnitudeMap(list):
     C = ' ' # Canvas
 
     def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2,
-            building_min=4, aspect_min=0.25):
+            building_min=4, aspect_min=0.2):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -397,6 +397,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
                                      , magnitudes
                                      , alley_width
                                      , building_min
+                                     , aspect_min=0.2
                                      , monkeys=True
                                       )))
 
