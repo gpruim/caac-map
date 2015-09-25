@@ -4,7 +4,7 @@ from pytest import raises
 
 def test_map_can_draw_an_empty_canvas():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=0)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 -              -
 -              -
@@ -17,7 +17,7 @@ def test_map_can_draw_an_empty_canvas():
 
 def test_map_can_draw_an_empty_canvas_with_different_size():
     m = genmap.MagnitudeMap(canvas_size=(40, 16), alley_width=4)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------------------------------
 ----------------------------------------
 --                                    --
@@ -43,7 +43,7 @@ def test_map_requires_alleys_to_be_even_widths():
     genmap.MagnitudeMap(canvas_size=(16, 8), alley_width=4)
 
 
-def test_map_can_be_loaded_from_unicode():
+def test_map_can_be_loaded_from_str():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
     u = """\
 ----------------
@@ -55,7 +55,7 @@ def test_map_can_be_loaded_from_unicode():
 -              -
 ----------------"""
     m.load(u)
-    assert unicode(m) == u
+    assert str(m) == u
 
 
 def test_load_checks_for_character_fitness():
@@ -77,7 +77,7 @@ def test_load_checks_for_character_fitness():
 def test_pt_places_tile():
     m = genmap.MagnitudeMap(canvas_size=(16,8))
     m.place_tile(m.B, 3, 4)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 -              -
 -              -
@@ -91,19 +91,19 @@ def test_pt_rejects_bad_tile():
     m = genmap.MagnitudeMap(canvas_size=(16,8))
     with raises(genmap.BadTile) as err:
         m.place_tile('$', 3, 4)
-    assert unicode(err.value) == "Can't place '$' at (3,4). Bad tile."
+    assert str(err.value) == "Can't place '$' at (3,4). Bad tile."
 
 def test_pt_rejects_clobbering_tile():
     m = genmap.MagnitudeMap(canvas_size=(16,8))
     with raises(genmap.AlreadyPlaced) as err:
         m.place_tile('#', 0, 0)
-    assert unicode(err.value) == "Can't place '#' at (0,0). Already placed: '-'."
+    assert str(err.value) == "Can't place '#' at (0,0). Already placed: '-'."
 
 def test_pt_rejects_out_of_bounds_tile():
     m = genmap.MagnitudeMap(canvas_size=(16,8))
     with raises(genmap.OutOfBounds) as err:
         m.place_tile('#', -1, 16)
-    assert unicode(err.value) == "Can't place '#' at (-1,16). Out of bounds. " \
+    assert str(err.value) == "Can't place '#' at (-1,16). Out of bounds. " \
                                  "Canvas size is (16,8)."
 
     m[0][0] = ' '
@@ -446,7 +446,7 @@ def test_gus_gets_multiple_unsnapped_shapes():
 def test_dhaas_draws_half_alleys_around_shape():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
     m.draw_half_alleys_around_shape((5, 1), 2, 2)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 --------       -
 --     -       -
@@ -462,7 +462,7 @@ def test_dhaas_draws_half_alleys_around_shape():
 def test_dsa_draws_shape_at():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
     m.draw_shape_at((14, 6), 1, 1)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --############--
@@ -475,7 +475,7 @@ def test_dsa_draws_shape_at():
 def test_dsa_draws_shape_that_doesnt_use_whole_canvas():
     m = genmap.MagnitudeMap(canvas_size=(16, 8))
     m.draw_shape_at((8, 6), 7, 1)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 -      ---------
 -      -######--
@@ -491,7 +491,7 @@ def test_dsa_draws_shape_that_doesnt_use_whole_canvas():
 def test_add_adds():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10)
     m.add(0, 10)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --############--
@@ -504,7 +504,7 @@ def test_add_adds():
 def test_add_adds_a_half_magnitude():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 5, shape_choice=0)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --############--
@@ -517,7 +517,7 @@ def test_add_adds_a_half_magnitude():
 def test_add_adds_the_other_shape_for_a_half_magnitude():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 5, shape_choice=1)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 --------       -
 --#####-       -
@@ -531,7 +531,7 @@ def test_add_adds_a_second_magnitude():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 5, shape_choice=1)
     m.add(0, 5)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --#####--#####--
@@ -545,7 +545,7 @@ def test_add_adds_magnitudes_with_different_ratios():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=7, building_min=1)
     m.add(0, 4, shape_choice=1)
     m.add(0, 3)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --######--####--
@@ -559,7 +559,7 @@ def test_add_exhibits_pinch_prevention():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 9, shape_choice=0)
     m.add(0, 1)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --############--
@@ -573,7 +573,7 @@ def test_add_exhibits_pinch_prevention_the_other_way():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
     m.add(0, 9, shape_choice=1)
     m.add(0, 1)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --#########--#--
@@ -595,7 +595,7 @@ def test_add_will_two_snap_to_a_soft_and_hard_bound():
 -              -
 ----------------""")
     m.add(0, 8)
-    assert unicode(m) == """\
+    assert str(m) == """\
 ----------------
 ----------------
 --####--######--
