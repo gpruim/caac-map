@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+import io
 import random
 import sys
 import traceback
-from cStringIO import StringIO
 from math import ceil, sqrt
 
 
@@ -16,9 +14,10 @@ class TilePlacementError(Exception):
     def __init__(self, *a):
         self.base_message = "Can't place '{}' at ({},{}).".format(*a[:3])
         Exception.__init__(self, *a)
-    def __unicode__(self):
+    def __str__(self):
         return self.base_message + " " + self.message.format(*self.args)
-    __str__ = __unicode__
+    def __bytes__(self):
+        return str(self).encode('utf8')
 
 class BadTile(TilePlacementError):
     message = "Bad tile."
@@ -37,7 +36,7 @@ class MagnitudeMap(list):
     C = ' ' # Canvas
 
     def __init__(self, canvas_size, sum_of_magnitudes=0, charset='-# ', alley_width=2,
-            building_min=4, aspect_min=0.25):
+            building_min=4, aspect_min=0.2):
         self.W, self.H = canvas_size
         if alley_width % 2 == 1: raise UnevenAlleys()
         self.alley_width = alley_width
@@ -65,7 +64,7 @@ class MagnitudeMap(list):
         for x in range(self.half_alley):    col(self.C, self.C)
         for x in range(self.half_alley):    col(self.A, self.A)
 
-    def __unicode__(self):
+    def __str__(self):
         out = []
         for y in range(self.H):
             for x in range(self.W):
@@ -73,11 +72,11 @@ class MagnitudeMap(list):
             out.append('\n')
         return ''.join(out[:-1])
 
-    def __str__(self):
-        return unicode(self).encode('UTF-8')
+    def __bytes__(self):
+        return str(self).encode('UTF-8')
 
     def to_svg(self, id='', offset_x=0, offset_y=0):
-        fp = StringIO()
+        fp = io.StringIO()
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
         for uid, (x, y, (w, h)) in self.shapes.items():
@@ -398,6 +397,7 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
                                      , magnitudes
                                      , alley_width
                                      , building_min
+                                     , aspect_min=0.2
                                      , monkeys=True
                                       )))
 
