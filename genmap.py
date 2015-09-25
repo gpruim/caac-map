@@ -79,7 +79,14 @@ class MagnitudeMap(list):
         fp = io.StringIO()
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
+
+        if pathways:
+            uids = list(self.shapes.keys())
+            random.shuffle(uids)
+
         for uid, (x, y, (w, h)) in self.shapes.items():
+            if pathways:
+                uid = uids.pop()
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
                    .format( uid
                           , x+self.half_alley
