@@ -3,6 +3,8 @@ import io
 import random
 import sys
 import traceback
+import itertools as it
+import uuid
 from math import ceil, sqrt
 
 
@@ -51,6 +53,7 @@ class MagnitudeMap(list):
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
         self.shapes = {}
+        self.assignments = {}
 
         # Build the base map. It's surrounded by alleys.
         innerW = self.W - (self.alley_width * 2)
@@ -126,7 +129,7 @@ class MagnitudeMap(list):
         return target_area
 
 
-    def add(self, uid, magnitude, shape_choice=None):
+    def add(self, magnitude, uid=None, shape_choice=None):
 
         # Find first empty cell.
         x, y = self.find_starting_corner()
@@ -149,6 +152,7 @@ class MagnitudeMap(list):
         self.draw_shape_at(shape, x, y)
 
         # Also save it for the SVG renderer to use.
+        uid = uid if uid else uuid.uuid4().hex
         self.shapes[uid] = (x, y, shape)
 
         # Decrement remaining_magnitudes.
@@ -354,6 +358,24 @@ class MagnitudeMap(list):
         return unsnapped
 
 
+    def assign_ids(self, pathways, seed=None):
+        """Given a pathways data structure, assign ids to pieces in self.shapes.
+
+        The pathways data structure is a dictionary of {'pathway': ['resource 1', 'resource 2']}.
+
+        """
+        pool = dict(self.shapes)
+        s2r = {}    # {shape id: resource id}
+        r2s = {}    # {resource id: shape id}
+        for to_assign in it.zip_longest(*pathways.values()):
+            for assignment in sorted(it.permutations(pool, len(to_assign))):
+                for rid, sid in zip(to_assign, assignment):
+                    if sid in s2r: continue
+                    if rid in r2s: continue
+                    s2r[sid], r2s[rid] = rid, sid
+        self.assignments = s2r
+
+
 def fake_data(N):
     return [random.randint(1, 20) for i in range(N)]
 
@@ -429,6 +451,7 @@ def main(topics, charset, width, height, alley_width, building_min):
         x, y, shape = big.shapes[uid]
         subtopics = topics[uid]['subtopics'].values()
         pathways = {s['id']: s['dag']['names'] for s in subtopics}
+        block.reassign_for_pathways(pathways)
         print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
@@ -451,8 +474,8 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, 
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
                          alley_width=alley_width, building_min=building_min, **kw)
         try:
-            for uid, magnitude in magnitudes:
-                m.add(uid, magnitude)
+            for _, magnitude in magnitudes:
+                m.add(magnitude)
                 nplaced += 1
                 nremaining -= 1
         except:
