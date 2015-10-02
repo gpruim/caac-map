@@ -188,3 +188,9 @@ def angle_between_vectors(vector1, vector2):
     bottom = vector1.norm() @ vector2.norm()
     angle = math.acos(top/bottom)
     return angle  # In radians
+
+
+if __name__ == '__main__':
+    # https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition
+    actual = Vector(1, 3, -5) @ Vector(4, -2, -1)
+    assert actual == 3, actual
