@@ -46,25 +46,23 @@ class Vector(object):
         return Vector(self.x + other.x, self.y+other.y, self.z+other.z)
     def __sub__(self, other):
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
-    def __mul__(self, other):  #The * operator is dot product
-        return self.dot(other)
-    def dot(self, other):
-        return self.x*other.x + self.y*other.y+self.z*other.z
-    def __pow__(self, other):  #The ** operator allows us to multiply a vector by a scalar
-        return self.scalar_mult(other)
-    def scalar_mult(self, other):
-        return Vector(self.x * other, self.y*other, self.z*other)
+    def __mul__(self, other):
+        return Vector(self.x * other, self.y * other, self.z * other)
+    def __matmul__(self, other):
+        return self.x * other.x + self.y * other.y + self.z * other.z
+    def __pow__(self, other):       # The ** operator allows us to multiply a vector by a scalar
+        return self * other
     def cross(self, other):
         x = self.y * other.z - other.y * self.z
         y = -(self.x * other.z - other.x * self.z)
         z = self.x * other.y - other.x * self.y
         return Vector(x,y,z)
-    def __mod__(self, other):  #The % operator is cross product
+    def __mod__(self, other):       # The % operator is cross product
         return self.cross(other)
-    def norm(self):  #Length of self
-        return math.sqrt(1.0*self.dot(self))
+    def norm(self):                 # Length of self
+        return math.sqrt(self @ self)
     def distance(self, other):
-        return (self-other).norm()  #Find difference and then the length of it
+        return (self-other).norm()  # Find difference and then the length of it
     def unit_vector(self):
         magnitude = self.norm()
         return Vector(1.0*self.x/magnitude, 1.0*self.y/magnitude, 1.0*self.z/magnitude)
@@ -91,12 +89,12 @@ class Segment(object):
         u = self.point2 - self.point1
         v = other.point2 - other.point1
         w = self.point1 - other.point1
-        a = u * u
-        b = u * v
-        c = v * v
-        d = u * w
-        e = v * w
-        D = a * c - b * b
+        a = u @ u
+        b = u @ v
+        c = v @ v
+        d = u @ w
+        e = v @ w
+        D = a @ c - b @ b
         sc = 0.0
         tc = 0.0
         basically_zero = .000000001
@@ -107,8 +105,8 @@ class Segment(object):
             else:
                 tc = e/c
         else:
-            sc = (b * e - c * d) / D
-            tc = (a * e - b * d) / D
+            sc = (b @ e - c @ d) / D
+            tc = (a @ e - b @ d) / D
         dP = w + u**sc - v**tc
         return dP.norm()
 
@@ -118,12 +116,12 @@ class Segment(object):
         u = self.point2 - self.point1
         v = other.point2 - other.point1
         w = self.point1 - other.point1
-        a = u * u  #* here is cross product
-        b = u * v
-        c = v * v
-        d = u * w
-        e = v * w
-        D = a * c - b * b
+        a = u @ u  #* here is cross product
+        b = u @ v
+        c = v @ v
+        d = u @ w
+        e = v @ w
+        D = a @ c - b @ b
         sc = 0.0
         sN = 0.0
         sD = D
@@ -137,8 +135,8 @@ class Segment(object):
             tN = e
             tD = c
         else:
-            sN = (b*e - c*d)
-            tN = (a*e - b*d)
+            sN = (b@e - c@d)
+            tN = (a@e - b@d)
             if sN < 0.0:
                 sN = 0.0
                 tN = e
@@ -173,7 +171,7 @@ class Segment(object):
             tc = 0.0
         else:
             tc = tN / tD
-        dP = w + u**sc - v**tc  #I'm pretty sure dP is the actual vector linking the lines
+        dP = w + u**sc - v**tc  # I'm pretty sure dP is the actual vector linking the lines
         return dP.norm()
 
 
@@ -186,7 +184,7 @@ class Line(Segment):
 
 def angle_between_vectors(vector1, vector2):
     #cos(theta)=dot product / (|a|*|b|)
-    top = vector1 * vector2  #* is dot product
-    bottom = vector1.norm() * vector2.norm()
+    top = vector1 @ vector2
+    bottom = vector1.norm() @ vector2.norm()
     angle = math.acos(top/bottom)
-    return angle  #In radians
+    return angle  # In radians
