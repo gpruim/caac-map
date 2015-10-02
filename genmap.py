@@ -85,7 +85,7 @@ class MagnitudeMap(list):
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
         for uid, (x, y, (w, h)) in self.shapes.items():
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                   .format( uid
+                   .format( self.assignments.get(uid, uid)
                           , x+self.half_alley
                           , y+self.half_alley
                           , w-self.alley_width
@@ -459,7 +459,7 @@ def main(topics, charset, width, height, alley_width, building_min):
         x, y, shape = big.shapes[uid]
         subtopics = topics[uid]['subtopics'].values()
         pathways = {s['id']: s['dag']['names'] for s in subtopics}
-        block.reassign_for_pathways(pathways)
+        block.assign_ids(pathways)
         print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
