@@ -37,17 +37,17 @@
 import math
 
 
-class Vector(object):
-    def __init__(self, x, y, z):
+class Point(object):
+    def __init__(self, x, y, z=0):
         self.x = x
         self.y = y
         self.z = z
     def __add__(self, other):
-        return Vector(self.x + other.x, self.y+other.y, self.z+other.z)
+        return Point(self.x + other.x, self.y+other.y, self.z+other.z)
     def __sub__(self, other):
-        return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
+        return Point(self.x - other.x, self.y - other.y, self.z - other.z)
     def __mul__(self, other):
-        return Vector(self.x * other, self.y * other, self.z * other)
+        return Point(self.x * other, self.y * other, self.z * other)
     def __matmul__(self, other):
         return self.x * other.x + self.y * other.y + self.z * other.z
     def __pow__(self, other):       # The ** operator allows us to multiply a vector by a scalar
@@ -56,22 +56,13 @@ class Vector(object):
         x = self.y * other.z - other.y * self.z
         y = -(self.x * other.z - other.x * self.z)
         z = self.x * other.y - other.x * self.y
-        return Vector(x,y,z)
+        return Point(x,y,z)
     def __mod__(self, other):       # The % operator is cross product
         return self.cross(other)
     def norm(self):                 # Length of self
         return math.sqrt(self @ self)
     def distance(self, other):
         return (self-other).norm()  # Find difference and then the length of it
-    def unit_vector(self):
-        magnitude = self.norm()
-        return Vector(1.0*self.x/magnitude, 1.0*self.y/magnitude, 1.0*self.z/magnitude)
-    def pitch(self):
-        return math.atan(1.0*self.z/self.y)
-    def roll(self):
-        return math.atan(1.0*self.x/self.y)
-    def yaw(self):
-        return math.atan(1.0*self.x/self.z)
 
 
 class Segment(object):
@@ -80,11 +71,8 @@ class Segment(object):
         self.point1 = point1
         self.point2 = point2
 
-    def min_distance_infinite(self, other):
-        """Return shortest distance between two lines.
-
-        Based off of http://geomalgorithms.com/a07-_distance.html.
-
+    def distance_from(self, other):
+        """Return shortest distance between two segments.
         """
         u = self.point2 - self.point1
         v = other.point2 - other.point1
@@ -94,49 +82,22 @@ class Segment(object):
         c = v @ v
         d = u @ w
         e = v @ w
-        D = a @ c - b @ b
-        sc = 0.0
-        tc = 0.0
-        basically_zero = .000000001
-        if D < basically_zero:
-            sc = 0.0
-            if b > c:
-                tc = d/b
-            else:
-                tc = e/c
-        else:
-            sc = (b @ e - c @ d) / D
-            tc = (a @ e - b @ d) / D
-        dP = w + u**sc - v**tc
-        return dP.norm()
-
-    def min_distance_finite(self, other):
-        """Return shortest distance between two segments.
-        """
-        u = self.point2 - self.point1
-        v = other.point2 - other.point1
-        w = self.point1 - other.point1
-        a = u @ u  #* here is cross product
-        b = u @ v
-        c = v @ v
-        d = u @ w
-        e = v @ w
-        D = a @ c - b @ b
+        D = a*c - b*b
         sc = 0.0
         sN = 0.0
         sD = D
         tc = 0.0
         tN = 0.0
         tD = D
-        basically_zero = .000000001
+        basically_zero = 0.000000001
         if D < basically_zero:
             sN = 0.0
             sD = 1.0
             tN = e
             tD = c
         else:
-            sN = (b@e - c@d)
-            tN = (a@e - b@d)
+            sN = (b*e - c*d)
+            tN = (a*e - b*d)
             if sN < 0.0:
                 sN = 0.0
                 tN = e
@@ -175,13 +136,6 @@ class Segment(object):
         return dP.norm()
 
 
-class Line(Segment):
-    def __init__(self, point1, direction_vector):
-        self.point1 = point1
-        self.direction = direction_vector.unit_vector()
-        self.point2 = point1 + self.direction
-
-
 def angle_between_vectors(vector1, vector2):
     #cos(theta)=dot product / (|a|*|b|)
     top = vector1 @ vector2
@@ -192,5 +146,23 @@ def angle_between_vectors(vector1, vector2):
 
 if __name__ == '__main__':
     # https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition
-    actual = Vector(1, 3, -5) @ Vector(4, -2, -1)
+    actual = Point(1, 3, -5) @ Point(4, -2, -1)
     assert actual == 3, actual
+
+    # Lines segments!
+    seg1 = Segment(Point(0,0,0), Point(10,0,0))
+    seg2 = Segment(Point(0,1,0), Point(10,2,4))
+    actual = seg1.distance_from(seg2)
+    assert actual == 1.0, actual
+
+    # Parallel segments -- squidgy.
+    seg1 = Segment(Point(0,0), Point(10,1))
+    seg2 = Segment(Point(0,1), Point(10,2))
+    actual = seg1.distance_from(seg2)
+    assert round(actual, 3) == 0.995, actual  # float rounding error? http://tinyurl.com/pz39qrt
+
+    # Crossing segments.
+    seg1 = Segment(Point(0,5), Point(10,1))
+    seg2 = Segment(Point(0,1), Point(10,2))
+    actual = seg1.distance_from(seg2)
+    assert actual == 0.0, actual
