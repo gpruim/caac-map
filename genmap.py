@@ -11,6 +11,7 @@ from math import ceil, sqrt
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
+class DoneAssigningIds(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -367,13 +368,19 @@ class MagnitudeMap(list):
         pool = dict(self.shapes)
         s2r = {}    # {shape id: resource id}
         r2s = {}    # {resource id: shape id}
-        for resources in it.zip_longest(*pathways.values()):
-            for assignment in sorted(it.permutations(pool, len(resources))):
-                for rid, sid in zip(resources, assignment):
-                    if rid is None: continue
-                    if sid in s2r: continue
-                    if rid in r2s: continue
-                    s2r[sid], r2s[rid] = rid, sid
+        levels = [it.chain(p, [None]) for p in pathways.values()]
+        try:
+            for resources in it.zip_longest(*levels):
+                if not any(resources):
+                    raise DoneAssigningIds
+                for assignment in sorted(it.permutations(pool, len(resources))):
+                    for rid, sid in zip(resources, assignment):
+                        if rid is None: continue
+                        if sid in s2r: continue
+                        if rid in r2s: continue
+                        s2r[sid], r2s[rid] = rid, sid
+        except DoneAssigningIds:
+            pass
         self.assignments = s2r
 
 
