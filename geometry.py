@@ -36,11 +36,6 @@
 # https://github.com/openleap/PyLeapMouse/blob/97d8839f094eed05a778ea657683ea70cfd475f3/LICENSE.txt
 
 import math
-from leap import Leap
-
-
-def to_vector(leap_vector):
-    return vector(leap_vector.x, leap_vector.y, leap_vector.z)
 
 
 class vector(object):
@@ -74,8 +69,6 @@ class vector(object):
     def unit_vector(self):
         magnitude = self.norm()
         return vector(1.0*self.x/magnitude, 1.0*self.y/magnitude, 1.0*self.z/magnitude)
-    def to_leap(self):
-        return Leap.Vector(self.x, self.y, self.z)
     def pitch(self):
         return math.atan(1.0*self.z/self.y)
     def roll(self):
