@@ -1,6 +1,5 @@
-#William Yager
-#Leap Python mouse controller POC
-#https://github.com/openleap/PyLeapMouse/blob/97d8839f094eed05a778ea657683ea70cfd475f3/Geometry.py
+# Adapted from code by William Yager:
+# https://github.com/openleap/PyLeapMouse/blob/97d8839f094eed05a778ea657683ea70cfd475f3/Geometry.py
 
 # Used under this license:
 
@@ -38,15 +37,15 @@
 import math
 
 
-class vector(object):
+class Vector(object):
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
     def __add__(self, other):
-        return vector(self.x + other.x, self.y+other.y, self.z+other.z)
+        return Vector(self.x + other.x, self.y+other.y, self.z+other.z)
     def __sub__(self, other):
-        return vector(self.x - other.x, self.y - other.y, self.z - other.z)
+        return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
     def __mul__(self, other):  #The * operator is dot product
         return self.dot(other)
     def dot(self, other):
@@ -54,12 +53,12 @@ class vector(object):
     def __pow__(self, other):  #The ** operator allows us to multiply a vector by a scalar
         return self.scalar_mult(other)
     def scalar_mult(self, other):
-        return vector(self.x * other, self.y*other, self.z*other)
+        return Vector(self.x * other, self.y*other, self.z*other)
     def cross(self, other):
         x = self.y * other.z - other.y * self.z
         y = -(self.x * other.z - other.x * self.z)
         z = self.x * other.y - other.x * self.y
-        return vector(x,y,z)
+        return Vector(x,y,z)
     def __mod__(self, other):  #The % operator is cross product
         return self.cross(other)
     def norm(self):  #Length of self
@@ -68,7 +67,7 @@ class vector(object):
         return (self-other).norm()  #Find difference and then the length of it
     def unit_vector(self):
         magnitude = self.norm()
-        return vector(1.0*self.x/magnitude, 1.0*self.y/magnitude, 1.0*self.z/magnitude)
+        return Vector(1.0*self.x/magnitude, 1.0*self.y/magnitude, 1.0*self.z/magnitude)
     def pitch(self):
         return math.atan(1.0*self.z/self.y)
     def roll(self):
@@ -77,12 +76,18 @@ class vector(object):
         return math.atan(1.0*self.x/self.z)
 
 
-class segment(object):
+class Segment(object):
+
     def __init__(self, point1, point2):
         self.point1 = point1
         self.point2 = point2
-    #Shortest distance code based off of http://geomalgorithms.com/a07-_distance.html
-    def min_distance_infinite(self, other):  #Return shortest distance between two lines
+
+    def min_distance_infinite(self, other):
+        """Return shortest distance between two lines.
+
+        Based off of http://geomalgorithms.com/a07-_distance.html.
+
+        """
         u = self.point2 - self.point1
         v = other.point2 - other.point1
         w = self.point1 - other.point1
@@ -106,7 +111,10 @@ class segment(object):
             tc = (a * e - b * d) / D
         dP = w + u**sc - v**tc
         return dP.norm()
-    def min_distance_finite(self, other):  #Return shortest distance between two segments
+
+    def min_distance_finite(self, other):
+        """Return shortest distance between two segments.
+        """
         u = self.point2 - self.point1
         v = other.point2 - other.point1
         w = self.point1 - other.point1
@@ -169,7 +177,7 @@ class segment(object):
         return dP.norm()
 
 
-class line(segment):
+class Line(Segment):
     def __init__(self, point1, direction_vector):
         self.point1 = point1
         self.direction = direction_vector.unit_vector()
