@@ -624,3 +624,29 @@ def test_ai_assigns_ids():
     assert m.assignments == {}
     m.assign_ids({'art': ['deadbeef', 'beeffeed']}, seed=[('a',)])
     assert m.assignments == {'a': 'deadbeef', 'b': 'beeffeed'}
+
+def test_ai_handles_two_pathways():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=84, building_min=1)
+    m.add(24, 'a')
+    m.add(30, 'b', shape_choice=0)
+    m.add(30, 'c')
+    assert str(m) == """\
+----------------
+----------------
+--##--########--
+--##------------
+--##------------
+--##--########--
+----------------
+----------------"""
+    assert m.assignments == {}
+    m.assign_ids({'art': ['dead', 'beef'], 'science': ['feed']})
+    possible_assignments = [
+        {'a': 'dead', 'b': 'beef', 'c': 'feed'},
+        {'a': 'dead', 'b': 'feed', 'c': 'beef'},
+        {'a': 'beef', 'b': 'feed', 'c': 'dead'},
+        {'a': 'beef', 'b': 'dead', 'c': 'feed'},
+        {'a': 'feed', 'b': 'dead', 'c': 'beef'},
+        {'a': 'feed', 'b': 'beef', 'c': 'dead'},
+    ]
+    assert m.assignments in possible_assignments

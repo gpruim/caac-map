@@ -367,9 +367,10 @@ class MagnitudeMap(list):
         pool = dict(self.shapes)
         s2r = {}    # {shape id: resource id}
         r2s = {}    # {resource id: shape id}
-        for to_assign in it.zip_longest(*pathways.values()):
-            for assignment in sorted(it.permutations(pool, len(to_assign))):
-                for rid, sid in zip(to_assign, assignment):
+        for resources in it.zip_longest(*pathways.values()):
+            for assignment in sorted(it.permutations(pool, len(resources))):
+                for rid, sid in zip(resources, assignment):
+                    if rid is None: continue
                     if sid in s2r: continue
                     if rid in r2s: continue
                     s2r[sid], r2s[rid] = rid, sid
