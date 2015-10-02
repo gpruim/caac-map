@@ -75,18 +75,11 @@ class MagnitudeMap(list):
     def __bytes__(self):
         return str(self).encode('UTF-8')
 
-    def to_svg(self, id='', offset_x=0, offset_y=0, pathways=None):
+    def to_svg(self, id='', offset_x=0, offset_y=0):
         fp = io.StringIO()
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
-
-        if pathways:
-            uids = list(self.shapes.keys())
-            random.shuffle(uids)
-
         for uid, (x, y, (w, h)) in self.shapes.items():
-            if pathways:
-                uid = uids.pop()
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
                    .format( uid
                           , x+self.half_alley
@@ -436,7 +429,7 @@ def main(topics, charset, width, height, alley_width, building_min):
         x, y, shape = big.shapes[uid]
         subtopics = topics[uid]['subtopics'].values()
         pathways = {s['id']: s['dag']['names'] for s in subtopics}
-        print(block.to_svg(uid, x + offset, y + offset, pathways), file=fp)
+        print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
     print('</svg>', file=fp)
