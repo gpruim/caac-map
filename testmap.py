@@ -670,11 +670,10 @@ def test_ai_doesnt_cross_pathways():
 ----------------"""
     assert m.assignments == {}
     pathway = {'art': ['dead', 'beef', 'deed', 'feed']}
-    Nope = genmap.UnreachableShape
     space = [ {'art': [('a', 'dead'), ('b', 'beef'), ('c', 'deed'), ('d', 'feed')]}
             , {'art': [('a', 'dead'), ('b', 'beef'), ('d', 'deed'), ('c', 'feed')]}
-            , {'art': [('a', 'dead'), ('c', 'beef'), ('b', 'deed'), ('d', Nope)]}
-            , {'art': [('a', 'dead'), ('c', 'beef'), ('d', 'deed'), ('b', Nope)]}
+           #, {'art': [('a', 'dead'), ('c', 'beef'), ('b', 'deed'), ('d', Nope)]}
+           #, {'art': [('a', 'dead'), ('c', 'beef'), ('d', 'deed'), ('b', Nope)]}
             , {'art': [('a', 'dead'), ('d', 'beef'), ('b', 'deed'), ('c', 'feed')]}
             , {'art': [('a', 'dead'), ('d', 'beef'), ('c', 'deed'), ('b', 'feed')]}
 
@@ -682,11 +681,11 @@ def test_ai_doesnt_cross_pathways():
             , {'art': [('b', 'dead'), ('a', 'beef'), ('d', 'deed'), ('c', 'feed')]}
             , {'art': [('b', 'dead'), ('c', 'beef'), ('a', 'deed'), ('d', 'feed')]}
             , {'art': [('b', 'dead'), ('c', 'beef'), ('d', 'deed'), ('a', 'feed')]}
-            , {'art': [('b', 'dead'), ('d', 'beef'), ('a', 'deed'), ('c', Nope)]}
-            , {'art': [('b', 'dead'), ('d', 'beef'), ('c', 'deed'), ('a', Nope)]}
+           #, {'art': [('b', 'dead'), ('d', 'beef'), ('a', 'deed'), ('c', Nope)]}
+           #, {'art': [('b', 'dead'), ('d', 'beef'), ('c', 'deed'), ('a', Nope)]}
 
-            , {'art': [('c', 'dead'), ('a', 'beef'), ('b', 'deed'), ('d', Nope)]}
-            , {'art': [('c', 'dead'), ('a', 'beef'), ('d', 'deed'), ('b', Nope)]}
+           #, {'art': [('c', 'dead'), ('a', 'beef'), ('b', 'deed'), ('d', Nope)]}
+           #, {'art': [('c', 'dead'), ('a', 'beef'), ('d', 'deed'), ('b', Nope)]}
             , {'art': [('c', 'dead'), ('b', 'beef'), ('a', 'deed'), ('d', 'feed')]}
             , {'art': [('c', 'dead'), ('b', 'beef'), ('d', 'deed'), ('a', 'feed')]}
             , {'art': [('c', 'dead'), ('d', 'beef'), ('a', 'deed'), ('b', 'feed')]}
@@ -694,8 +693,8 @@ def test_ai_doesnt_cross_pathways():
 
             , {'art': [('d', 'dead'), ('a', 'beef'), ('b', 'deed'), ('c', 'feed')]}
             , {'art': [('d', 'dead'), ('a', 'beef'), ('c', 'deed'), ('b', 'feed')]}
-            , {'art': [('d', 'dead'), ('b', 'beef'), ('a', 'deed'), ('c', Nope)]}
-            , {'art': [('d', 'dead'), ('b', 'beef'), ('c', 'deed'), ('a', Nope)]}
+           #, {'art': [('d', 'dead'), ('b', 'beef'), ('a', 'deed'), ('c', Nope)]}
+           #, {'art': [('d', 'dead'), ('b', 'beef'), ('c', 'deed'), ('a', Nope)]}
             , {'art': [('d', 'dead'), ('c', 'beef'), ('a', 'deed'), ('b', 'feed')]}
             , {'art': [('d', 'dead'), ('c', 'beef'), ('b', 'deed'), ('a', 'feed')]}
              ]

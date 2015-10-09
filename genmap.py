@@ -7,12 +7,13 @@ import itertools as it
 import uuid
 from math import ceil, sqrt
 
+from geometry import Point, Segment
+
 
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
 class DoneAssigningIds(Exception): pass
-class UnreachableShape(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -368,24 +369,57 @@ class MagnitudeMap(list):
         The return structure should be {'pathway': [ ('shape-a', 'resource-1')
                                                    , ('shape-b', 'resource-2')
                                                     ]}
+
+        The point of this method is to make the assignment in such a way as to
+        have aesthetically pleasing pathways, ones that at the very least don't
+        cross themselves.
+
         """
 
         # Flatten all resources into a single list (with predictable ordering).
         resources = list(it.chain(*[p[1] for p in sorted(pathways.items())]))
 
-        # Give ourselves a way to find the pathway given a resource.
+        # Give ourselves a way to find the pathway for a given resource.
         r2p = {}
         for k,v in pathways.items():
             for val in v:
               r2p[val] = k
 
+        def get_center(shape):
+            """Given a shape, return a Point for the center of it.
+            """
+            x,y, (w,h) = shape
+            return Point(x + w/2, y + h/2)
+
         # Now let's explore the space of possibilities!
         space = []
         for permutation in it.permutations(sorted(self.shapes)):
             option = {k: [] for k in pathways}
-            for assignment in zip(permutation, resources):
+            assignments = zip(permutation, resources)
+            segments = []
+            for i, assignment in enumerate(assignments):
+                shape = self.shapes[assignment[0]]
+                center = get_center(shape)
+
+                if i == 0:      # First point: start a segment.
+                    segments.append(Segment(center, center))
+                elif i == 1:    # Second point: finish the first segment.
+                    segments[0].point2 = center
+                else:           # We're off and running: compare segments.
+                    candidate = Segment(segments[-1].point2, center)
+                    if i > 2:
+                        bad = None
+                        for segment in reversed(segments[:-1]):
+                            if candidate.distance_from(segment) <= 1:
+                                bad = True
+                                break
+                        if bad:
+                            break
+                    segments.append(candidate)
+
                 option[r2p[assignment[1]]].append(assignment)
-            space.append(option)
+            else:
+                space.append(option)
         self.assignments = random.choice(space)
         return space
 
