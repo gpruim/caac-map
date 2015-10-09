@@ -5,7 +5,7 @@ import sys
 import traceback
 import itertools as it
 import uuid
-from math import ceil, sqrt
+from math import ceil, sqrt, factorial
 
 from geometry import Point, Segment
 
@@ -97,9 +97,6 @@ class MagnitudeMap(list):
                   )
         print('    </svg>', file=fp)
         return fp.getvalue()
-
-    def get_shape(self, uid):
-        return self.shapes[uid]
 
 
     def load(self, u):
@@ -361,7 +358,7 @@ class MagnitudeMap(list):
         return unsnapped
 
 
-    def assign_ids(self, pathways):
+    def assign_ids(self, pathways, take_first=True):
         """Given a pathways data structure, assign resources to shapes.
 
         The pathways data structure is a dictionary of {'pathway': ['resource-1', 'resource-2']}.
@@ -391,9 +388,21 @@ class MagnitudeMap(list):
             x,y, (w,h) = shape
             return Point(x + w/2, y + h/2)
 
+        def get_valid_segment(segments, point):
+            """Given a list of segments and a point, return a segment or None.
+            """
+            candidate = Segment(segments[-1].point2, point)
+            for segment in reversed(segments[:-1]):
+                if candidate.distance_from(segment) <= 1:
+                    return None
+            return candidate
+
         # Now let's explore the space of possibilities!
         space = []
-        for permutation in it.permutations(sorted(self.shapes)):
+        permutations = it.permutations(sorted(self.shapes))
+        npermutations = factorial(len(self.shapes))
+        for j, permutation in enumerate(permutations):
+            print("Trying permutation {} / {}.".format(j, npermutations))
             option = {k: [] for k in pathways}
             assignments = zip(permutation, resources)
             segments = []
@@ -405,21 +414,17 @@ class MagnitudeMap(list):
                     segments.append(Segment(center, center))
                 elif i == 1:    # Second point: finish the first segment.
                     segments[0].point2 = center
-                else:           # We're off and running: compare segments.
-                    candidate = Segment(segments[-1].point2, center)
-                    if i > 2:
-                        bad = None
-                        for segment in reversed(segments[:-1]):
-                            if candidate.distance_from(segment) <= 1:
-                                bad = True
-                                break
-                        if bad:
-                            break
-                    segments.append(candidate)
+                else:           # We're off and running: validate segments.
+                    segment = get_valid_segment(segments, center)
+                    if segment is None:
+                        break
+                    segments.append(segment)
 
                 option[r2p[assignment[1]]].append(assignment)
             else:
                 space.append(option)
+                if take_first:
+                    break
         self.assignments = random.choice(space)
         return space
 
@@ -464,7 +469,7 @@ def main(topics, charset, width, height, alley_width, building_min):
         err()
         err(topic_id, '-' * (80 - len(topic_id) - 1))
         err()
-        x, y, (w, h) = big.get_shape(topic_id)
+        x, y, (w, h) = big.shapes[topic_id]
         canvas_size = (w - offset, h - offset)
         blocks.append((topic_id, fill_one( charset
                                          , topic_id
@@ -522,8 +527,8 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, 
         m = MagnitudeMap(canvas_size=canvas_size, sum_of_magnitudes=smagnitudes, charset=charset,
                          alley_width=alley_width, building_min=building_min, **kw)
         try:
-            for _, magnitude in magnitudes:
-                m.add(magnitude)
+            for uid, magnitude in magnitudes:
+                m.add(magnitude, uid=uid)
                 nplaced += 1
                 nremaining -= 1
         except:

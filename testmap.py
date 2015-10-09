@@ -622,7 +622,7 @@ def test_ai_assigns_ids():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    space = m.assign_ids({'art': ['deadbeef', 'beeffeed']})
+    space = m.assign_ids({'art': ['deadbeef', 'beeffeed']}, take_first=False)
     assert space == [ {'art': [('a', 'deadbeef'), ('b', 'beeffeed')]}
                     , {'art': [('b', 'deadbeef'), ('a', 'beeffeed')]}
                      ]
@@ -643,7 +643,7 @@ def test_ai_handles_two_pathways():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    space = m.assign_ids({'art': ['beef', 'dead'], 'science': ['feed']})
+    space = m.assign_ids({'art': ['beef', 'dead'], 'science': ['feed']}, take_first=False)
     assert space == [ {'art': [('a', 'beef'), ('b', 'dead')], 'science': [('c', 'feed')]}
                     , {'art': [('a', 'beef'), ('c', 'dead')], 'science': [('b', 'feed')]}
                     , {'art': [('b', 'beef'), ('a', 'dead')], 'science': [('c', 'feed')]}
@@ -698,5 +698,5 @@ def test_ai_doesnt_cross_pathways():
             , {'art': [('d', 'dead'), ('c', 'beef'), ('a', 'deed'), ('b', 'feed')]}
             , {'art': [('d', 'dead'), ('c', 'beef'), ('b', 'deed'), ('a', 'feed')]}
              ]
-    actual = m.assign_ids(pathway)
+    actual = m.assign_ids(pathway, take_first=False)
     assert actual == space
