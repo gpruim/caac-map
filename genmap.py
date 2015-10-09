@@ -369,15 +369,21 @@ class MagnitudeMap(list):
                                                    , ('shape-b', 'resource-2')
                                                     ]}
         """
+
+        # Flatten all resources into a single list (with predictable ordering).
+        resources = list(it.chain(*[p[1] for p in sorted(pathways.items())]))
+
+        # Give ourselves a way to find the pathway given a resource.
         r2p = {}
         for k,v in pathways.items():
             for val in v:
               r2p[val] = k
+
+        # Now let's explore the space of possibilities!
         space = []
-        resources = sorted(list(it.chain(*pathways.values())))
-        for permutation in sorted(it.permutations(self.shapes)):
+        for permutation in it.permutations(sorted(self.shapes)):
             option = {k: [] for k in pathways}
-            for assignment in sorted(zip(permutation, resources), key=lambda a: a[1]):
+            for assignment in zip(permutation, resources):
                 option[r2p[assignment[1]]].append(assignment)
             space.append(option)
         self.assignments = random.choice(space)
