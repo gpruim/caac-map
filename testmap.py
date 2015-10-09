@@ -622,7 +622,7 @@ def test_ai_assigns_ids():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    m.assign_ids({'art': ['deadbeef', 'beeffeed']}, seed=[('a',)])
+    m.assign_ids({'art': ['deadbeef', 'beeffeed']})
     assert m.assignments == {'a': 'deadbeef', 'b': 'beeffeed'}
 
 def test_ai_handles_two_pathways():
