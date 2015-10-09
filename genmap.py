@@ -12,6 +12,7 @@ class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
 class DoneAssigningIds(Exception): pass
+class UnreachableShape(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -359,29 +360,28 @@ class MagnitudeMap(list):
         return unsnapped
 
 
-    def assign_ids(self, pathways, seed=None):
-        """Given a pathways data structure, assign ids to pieces in self.shapes.
+    def assign_ids(self, pathways):
+        """Given a pathways data structure, assign resources to shapes.
 
-        The pathways data structure is a dictionary of {'pathway': ['resource 1', 'resource 2']}.
+        The pathways data structure is a dictionary of {'pathway': ['resource-1', 'resource-2']}.
 
+        The return structure should be {'pathway': [ ('shape-a', 'resource-1')
+                                                   , ('shape-b', 'resource-2')
+                                                    ]}
         """
-        pool = dict(self.shapes)
-        s2r = {}    # {shape id: resource id}
-        r2s = {}    # {resource id: shape id}
-        levels = [it.chain(p, [None]) for p in pathways.values()]
-        try:
-            for resources in it.zip_longest(*levels):
-                if not any(resources):
-                    raise DoneAssigningIds
-                for assignment in sorted(it.permutations(pool, len(resources))):
-                    for rid, sid in zip(resources, assignment):
-                        if rid is None: continue
-                        if sid in s2r: continue
-                        if rid in r2s: continue
-                        s2r[sid], r2s[rid] = rid, sid
-        except DoneAssigningIds:
-            pass
-        self.assignments = s2r
+        r2p = {}
+        for k,v in pathways.items():
+            for val in v:
+              r2p[val] = k
+        space = []
+        resources = sorted(list(it.chain(*pathways.values())))
+        for permutation in sorted(it.permutations(self.shapes)):
+            option = {k: [] for k in pathways}
+            for assignment in sorted(zip(permutation, resources), key=lambda a: a[1]):
+                option[r2p[assignment[1]]].append(assignment)
+            space.append(option)
+        self.assignments = random.choice(space)
+        return space
 
 
 def fake_data(N):

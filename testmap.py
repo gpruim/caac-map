@@ -622,8 +622,11 @@ def test_ai_assigns_ids():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    m.assign_ids({'art': ['deadbeef', 'beeffeed']})
-    assert m.assignments == {'a': 'deadbeef', 'b': 'beeffeed'}
+    space = m.assign_ids({'art': ['deadbeef', 'beeffeed']})
+    assert space == [ {'art': [('a', 'beeffeed'), ('b', 'deadbeef')]}
+                    , {'art': [('b', 'beeffeed'), ('a', 'deadbeef')]}
+                     ]
+    assert m.assignments in space
 
 def test_ai_handles_two_pathways():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=84, building_min=1)
@@ -640,13 +643,61 @@ def test_ai_handles_two_pathways():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    m.assign_ids({'art': ['dead', 'beef'], 'science': ['feed']})
-    possible_assignments = [
-        {'a': 'dead', 'b': 'beef', 'c': 'feed'},
-        {'a': 'dead', 'b': 'feed', 'c': 'beef'},
-        {'a': 'beef', 'b': 'feed', 'c': 'dead'},
-        {'a': 'beef', 'b': 'dead', 'c': 'feed'},
-        {'a': 'feed', 'b': 'dead', 'c': 'beef'},
-        {'a': 'feed', 'b': 'beef', 'c': 'dead'},
-    ]
-    assert m.assignments in possible_assignments
+    space = m.assign_ids({'art': ['beef', 'dead'], 'science': ['feed']})
+    assert space == [ {'art': [('a', 'beef'), ('b', 'dead')], 'science': [('c', 'feed')]}
+                    , {'art': [('a', 'beef'), ('c', 'dead')], 'science': [('b', 'feed')]}
+                    , {'art': [('b', 'beef'), ('a', 'dead')], 'science': [('c', 'feed')]}
+                    , {'art': [('b', 'beef'), ('c', 'dead')], 'science': [('a', 'feed')]}
+                    , {'art': [('c', 'beef'), ('a', 'dead')], 'science': [('b', 'feed')]}
+                    , {'art': [('c', 'beef'), ('b', 'dead')], 'science': [('a', 'feed')]}
+                     ]
+    assert m.assignments in space
+
+def test_ai_doesnt_cross_pathways():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=84, building_min=1)
+    m.add(24, 'a')
+    m.add(15, 'b', shape_choice=2)
+    m.add(15, 'c')
+    m.add(30, 'd', shape_choice=1)
+    assert str(m) == """\
+----------------
+----------------
+--##--###--###--
+--##------------
+--##------------
+--##--########--
+----------------
+----------------"""
+    assert m.assignments == {}
+    pathway = {'art': ['dead', 'beef', 'feed', 'deed']}
+    Nope = genmap.UnreachableShape
+    space = [ {'art': [('a', 'beef'), ('b', 'dead'), ('c', 'deed'), ('d', 'feed')]}
+            , {'art': [('a', 'beef'), ('b', 'dead'), ('d', 'deed'), ('c', 'feed')]}
+            , {'art': [('a', 'beef'), ('c', 'dead'), ('b', 'deed'), ('d', Nope)]}
+            , {'art': [('a', 'beef'), ('c', 'dead'), ('d', 'deed'), ('b', Nope)]}
+            , {'art': [('a', 'beef'), ('d', 'dead'), ('b', 'deed'), ('c', 'feed')]}
+            , {'art': [('a', 'beef'), ('d', 'dead'), ('c', 'deed'), ('b', 'feed')]}
+
+            , {'art': [('b', 'beef'), ('a', 'dead'), ('c', 'deed'), ('d', 'feed')]}
+            , {'art': [('b', 'beef'), ('a', 'dead'), ('d', 'deed'), ('c', 'feed')]}
+            , {'art': [('b', 'beef'), ('c', 'dead'), ('a', 'deed'), ('d', 'feed')]}
+            , {'art': [('b', 'beef'), ('c', 'dead'), ('d', 'deed'), ('a', 'feed')]}
+            , {'art': [('b', 'beef'), ('d', 'dead'), ('a', 'deed'), ('c', Nope)]}
+            , {'art': [('b', 'beef'), ('d', 'dead'), ('c', 'deed'), ('a', Nope)]}
+
+            , {'art': [('c', 'beef'), ('a', 'dead'), ('b', 'deed'), ('d', Nope)]}
+            , {'art': [('c', 'beef'), ('a', 'dead'), ('d', 'deed'), ('b', Nope)]}
+            , {'art': [('c', 'beef'), ('b', 'dead'), ('a', 'deed'), ('d', 'feed')]}
+            , {'art': [('c', 'beef'), ('b', 'dead'), ('d', 'deed'), ('a', 'feed')]}
+            , {'art': [('c', 'beef'), ('d', 'dead'), ('a', 'deed'), ('b', 'feed')]}
+            , {'art': [('c', 'beef'), ('d', 'dead'), ('b', 'deed'), ('a', 'feed')]}
+
+            , {'art': [('d', 'beef'), ('a', 'dead'), ('b', 'deed'), ('c', 'feed')]}
+            , {'art': [('d', 'beef'), ('a', 'dead'), ('c', 'deed'), ('b', 'feed')]}
+            , {'art': [('d', 'beef'), ('b', 'dead'), ('a', 'deed'), ('c', Nope)]}
+            , {'art': [('d', 'beef'), ('b', 'dead'), ('c', 'deed'), ('a', Nope)]}
+            , {'art': [('d', 'beef'), ('c', 'dead'), ('a', 'deed'), ('b', 'feed')]}
+            , {'art': [('d', 'beef'), ('c', 'dead'), ('b', 'deed'), ('a', 'feed')]}
+             ]
+    actual = m.assign_ids(pathway)
+    assert actual == space
