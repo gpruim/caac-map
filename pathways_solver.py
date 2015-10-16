@@ -32,6 +32,7 @@ def get_valid_segment(segments, point):
 class Problem(object):
 
     depth = -1
+    ncalls = 0
 
     def __init__(self, shapes, pathways):
         """Instantiate a pathways assignment problem.
@@ -77,31 +78,32 @@ class Problem(object):
 
         # Logfile!
         self.logfile = open('problem.log', 'w+')
+        self.loglines = 0
 
 
     def log(self, *a, **kw):
+        self.loglines += 1
         msg, a = (a[0], a[1:]) if len(a) else ('', a)
         kw['file'] = self.logfile
-        print('{}{}'.format('  '*self.depth, msg.ljust(14)), *a, **kw)
-
+        print('{:>2} {}{}'.format( self.loglines
+                                 , '| '*self.depth
+                                 , msg.ljust(24-(2*self.depth)))
+                                 , *a
+                                 , **kw
+                                  )
 
     def clean_up(self, s):
         """Clean up mutated objects.
         """
-        self.log('', s)
-        self.log('', self.indices)
-        self.log('', self.p2s)
         if self.indices:
             _,r = self.indices.pop()
+            self.log('\ pop {}'.format((_,r)), self.indices)
             if self.r2p:
                 pathway_id = self.r2p[self.resources[r]]
                 if s:
                     s[pathway_id].pop()
                 if self.p2s[pathway_id]:
                     self.p2s[pathway_id].pop()
-        self.log('', self.p2s)
-        self.log('', self.indices)
-        self.log('', s)
 
 
 def solve(shapes, pathways):
@@ -149,10 +151,11 @@ def output(P, c):
     P.solutions.append({k:v[:] for k,v in c.items()})  # be sure to copy it!
 
 def first(P, c):
+    #P.log("first", P.indices)
     if len(P.indices) == P.n:
         return None  # base case
     elif not P.indices:
-        s,r = (0,0)
+        s,r = (0,0)  # root case
     else:
         s,r = P.indices[-1]
         s += 1
@@ -160,43 +163,45 @@ def first(P, c):
         if s == P.n: s = 0
         if r == P.n: r = 0
     P.indices.append((s,r))
+    P.log('\ append {}'.format((s,r)), P.indices)
     shape_id, resource_id = P.shapes[s], P.resources[r]
     c[P.r2p[resource_id]].append((shape_id, resource_id))
     return c
 
 def next(P, sibling):
-    P.log("next", P.indices)
     if not P.indices:
         return None  # base case
     s,r = P.indices[-1]
-    P.log("next", (s, r))
+    P.log('| seek {}'.format((s,r)), P.indices)
     s += 1
     if s == P.n:
         s = 0
         r += 1
         if r == P.n:
             return None  # base case
-    P.indices[-1] = (s, r)
-    P.log("next", (s, r))
+    P.indices[-1] = (s,r)
+    P.log('\ set {}'.format((s,r)), P.indices)
     shape_id, resource_id = P.shapes[s], P.resources[r]
+    #P.log("next", shape_id, resource_id)
     sibling[P.r2p[resource_id]][-1] = (shape_id, resource_id)
     return sibling
 
 def backtrack(P, c):
+    P.ncalls += 1
     P.depth += 1
-    P.log("Called with:", c)
+    #P.log("Call #{}".format(P.ncalls), c)
     if reject(P, c): return
     if accept(P, c): output(P, c)
-    P.log("Solutions:", P.solutions)
+    #P.log("Solutions:", len(P.solutions))
     s = first(P, c)
-    P.log("First child:", s)
+    #P.log("First child:", s)
     while s:
-        P.log()
+        #P.log()
         backtrack(P, s)
-        P.log()
-        P.log("Prev sibling:", s)
+        #P.log()
+        #P.log("Prev sibling:", s)
         s = next(P, s)
-        P.log("Next sibling:", s)
-    P.log("Cleaning up.")
+        #P.log("Next sibling:", s)
+    #P.log("Cleaning up.")
     P.clean_up(c)
     P.depth -= 1
