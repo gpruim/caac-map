@@ -80,6 +80,19 @@ class Problem(object):
         self.solutions = []
 
 
+    def clean_up(self, s):
+        """Clean up mutated objects.
+        """
+        if self.indices:
+            _,r = self.indices.pop()
+        if self.r2p:
+            pathway_id = self.r2p[self.resources[r]]
+            if s:
+                s[pathway_id].pop()
+            if self.p2s[pathway_id]:
+                self.p2s[pathway_id].pop()
+
+
 def solve(shapes, pathways):
     problem = Problem(shapes, pathways)
     backtrack(problem, root(problem))
@@ -170,11 +183,5 @@ def backtrack(P, c):
         log("Recursed.")
         s = next(P, s)
         log("Next sibling:", s)
-
-    # Clean up mutated objects.
     log("Cleaning up.")
-    if P.indices: _,r = P.indices.pop()
-    if P.r2p:
-        pathway_id = P.r2p[P.resources[r]]
-        if s: s[pathway_id].pop()
-        if P.p2s[pathway_id]: P.p2s[pathway_id].pop()
+    P.clean_up(s)
