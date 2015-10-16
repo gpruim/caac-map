@@ -2,7 +2,7 @@ language: python
 python:
   - "3.5"
 install: "pip install -r requirements.txt"
-script: "py.test testmap.py"
+script: "py.test test_*.py"
 notifications:
   email: false
 sudo: false
