@@ -623,9 +623,10 @@ def test_ai_assigns_ids():
 ----------------"""
     assert m.assignments == {}
     solutions = m.assign_ids({'art': ['deadbeef', 'beeffeed']}, take_first=False)
-    import pdb; pdb.set_trace()
     assert solutions == [ {'art': [('a', 'deadbeef'), ('b', 'beeffeed')]}
                         , {'art': [('b', 'deadbeef'), ('a', 'beeffeed')]}
+                        , {'art': [('a', 'beeffeed'), ('b', 'deadbeef')]}
+                        , {'art': [('b', 'beeffeed'), ('a', 'deadbeef')]}
                          ]
     assert m.assignments in solutions
 

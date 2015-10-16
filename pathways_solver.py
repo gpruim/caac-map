@@ -5,13 +5,6 @@ import itertools as it
 from geometry import Point, Segment
 
 
-logfile = open('backtrack.log', 'w+')
-def log(*a, **kw):
-    msg, a = (a[0], a[1:]) if len(a) else ('', a)
-    kw['file'] = logfile
-    print(msg.ljust(24), *a, **kw)
-
-
 def flatten(pathways):
     """Flatten all resources into a single sequence (with predictable ordering).
 
@@ -37,6 +30,9 @@ def get_valid_segment(segments, point):
 
 
 class Problem(object):
+
+    depth = -1
+
     def __init__(self, shapes, pathways):
         """Instantiate a pathways assignment problem.
 
@@ -79,18 +75,33 @@ class Problem(object):
         # We'll accumulate solutions into a list.
         self.solutions = []
 
+        # Logfile!
+        self.logfile = open('problem.log', 'w+')
+
+
+    def log(self, *a, **kw):
+        msg, a = (a[0], a[1:]) if len(a) else ('', a)
+        kw['file'] = self.logfile
+        print('{}{}'.format('  '*self.depth, msg.ljust(14)), *a, **kw)
+
 
     def clean_up(self, s):
         """Clean up mutated objects.
         """
+        self.log('', s)
+        self.log('', self.indices)
+        self.log('', self.p2s)
         if self.indices:
             _,r = self.indices.pop()
-        if self.r2p:
-            pathway_id = self.r2p[self.resources[r]]
-            if s:
-                s[pathway_id].pop()
-            if self.p2s[pathway_id]:
-                self.p2s[pathway_id].pop()
+            if self.r2p:
+                pathway_id = self.r2p[self.resources[r]]
+                if s:
+                    s[pathway_id].pop()
+                if self.p2s[pathway_id]:
+                    self.p2s[pathway_id].pop()
+        self.log('', self.p2s)
+        self.log('', self.indices)
+        self.log('', s)
 
 
 def solve(shapes, pathways):
@@ -126,7 +137,7 @@ def reject(P, c):
     else:                   # We're off and running: validate segments.
         segment = get_valid_segment(segments, center)
         if segment is None:
-            log("Rejecting!")
+            P.log("Rejecting!")
             return True
         segments.append(segment)
     return False
@@ -154,9 +165,11 @@ def first(P, c):
     return c
 
 def next(P, sibling):
+    P.log("next", P.indices)
     if not P.indices:
-        pass
+        return None  # base case
     s,r = P.indices[-1]
+    P.log("next", (s, r))
     s += 1
     if s == P.n:
         s = 0
@@ -164,24 +177,26 @@ def next(P, sibling):
         if r == P.n:
             return None  # base case
     P.indices[-1] = (s, r)
+    P.log("next", (s, r))
     shape_id, resource_id = P.shapes[s], P.resources[r]
     sibling[P.r2p[resource_id]][-1] = (shape_id, resource_id)
     return sibling
 
 def backtrack(P, c):
-    log("Called with:", c)
+    P.depth += 1
+    P.log("Called with:", c)
     if reject(P, c): return
-    log("Not rejected.")
     if accept(P, c): output(P, c)
-    log("Accepted?", P.solutions)
+    P.log("Solutions:", P.solutions)
     s = first(P, c)
-    log("First sibling:", s)
+    P.log("First child:", s)
     while s:
-        log("Recursing ...")
-        log()
+        P.log()
         backtrack(P, s)
-        log("Recursed.")
+        P.log()
+        P.log("Prev sibling:", s)
         s = next(P, s)
-        log("Next sibling:", s)
-    log("Cleaning up.")
-    P.clean_up(s)
+        P.log("Next sibling:", s)
+    P.log("Cleaning up.")
+    P.clean_up(c)
+    P.depth -= 1
