@@ -7,7 +7,7 @@ import itertools as it
 import uuid
 from math import ceil, sqrt, factorial
 
-from geometry import Point, Segment
+import pathways_solver
 
 
 class NoPossibleShapes(Exception): pass
@@ -360,158 +360,8 @@ class MagnitudeMap(list):
 
     def assign_ids(self, pathways, take_first=True):
         """Given a pathways data structure, assign resources to shapes.
-
-        The pathways data structure is a dictionary of {'pathway': ['resource-1', 'resource-2']}.
-
-        The return structure should be {'pathway': [ ('shape-a', 'resource-1')
-                                                   , ('shape-b', 'resource-2')
-                                                    ]}
-
-        The point of this method is to make the assignment in such a way as to
-        have aesthetically pleasing pathways, ones that at the very least don't
-        cross themselves.
-
         """
-
-        # Give ourselves a way to find the pathway for a given resource.
-        r2p = {}
-        for k,v in pathways.items():
-            for val in v:
-              r2p[val] = k
-
-        # And let's maintain a list of segments for each pathway.
-        p2s = {k:[] for k in pathways}
-
-        # A few helper functions ...
-        def flatten(pathways):
-            """Flatten all resources into a single sequence (with predictable ordering).
-
-            This assumes that resource ids are unique across pathways, of course.
-
-            """
-            return tuple(it.chain(*[p[1] for p in sorted(pathways.items())]))
-
-        def get_center(shape):
-            """Given a shape, return a Point for the center of it.
-            """
-            x,y, (w,h) = shape
-            return Point(x + w/2, y + h/2)
-
-        def get_valid_segment(segments, point):
-            """Given a list of segments and a point, return a segment or None.
-            """
-            candidate = Segment(segments[-1].point2, point)
-            for segment in reversed(segments[:-1]):
-                if candidate.distance_from(segment) <= 1:
-                    return None
-            return candidate
-
-
-        # Now let's explore the space of possibilities!
-
-        class P:
-            shapes = tuple(sorted(self.shapes))
-            resources = flatten(pathways)
-
-            n = len(shapes)
-            assert len(resources) == n
-
-            # Maintain indices into shapes and resources for the current node while backtracking.
-            indices = []  # pairs of (shape_index, resource_index) per level
-
-        P = P()
-
-        solutions = []
-
-        def root(P):
-            return {k:[] for k in pathways}
-
-        def reject(P, c):
-            if not P.indices:
-                assert flatten(c) == tuple()  # first case, root
-                return False
-
-            s,r = P.indices[-1]
-            shape_id, resource_id = P.shapes[s], P.resources[r]
-            shape = self.shapes[shape_id]
-            center = get_center(shape)
-            pathway_id = r2p[resource_id]
-            segments = p2s[pathway_id]
-            nsegments = len(segments)
-
-            if nsegments == 0:      # First point: start a segment.
-                segments.append(Segment(center, center))
-            elif nsegments == 1:    # Second point: finish the first segment.
-                segments[0].point2 = center
-            else:                   # We're off and running: validate segments.
-                segment = get_valid_segment(segments, center)
-                if segment is None:
-                    return True
-                segments.append(segment)
-            return False
-
-        def accept(P, c):
-            return len(flatten(c)) == P.n
-
-        def output(P, c):
-            solutions.append({k:v[:] for k,v in c.items()})  # be sure to copy it!
-
-        def first(P, c):
-            if len(P.indices) == P.n:
-                return None  # base case
-            elif not P.indices:
-                s,r = (0,0)
-            else:
-                s,r = P.indices[-1]
-                s += 1
-                r += 1
-                if s == P.n: s = 0
-                if r == P.n: r = 0
-            P.indices.append((s,r))
-            shape_id, resource_id = P.shapes[s], P.resources[r]
-            c[r2p[resource_id]].append((shape_id, resource_id))
-            return c
-
-        def next(P, sibling):
-            print("next", sibling)
-            if not P.indices:
-                import pdb; pdb.set_trace()
-            s,r = P.indices[-1]
-            s += 1
-            if s == P.n:
-                s = 0
-                r += 1
-                if r == P.n:
-                    return None  # base case
-            P.indices[-1] = (s, r)
-            shape_id, resource_id = P.shapes[s], P.resources[r]
-            sibling[r2p[resource_id]][-1] = (shape_id, resource_id)
-            return sibling
-
-        def backtrack(c):
-            print("backtracking", c)
-            if reject(P, c): return
-            print("not rejected", c)
-            if accept(P, c): output(P, c)
-            print("accepted?", solutions)
-            s = first(P, c)
-            print("first:", s)
-            while s:
-                print("about to backtrack")
-                backtrack(s)
-                print("just backtracked. next ...")
-                s = next(P, s)
-                print("back from next", s)
-
-            print("cleaning up mutated objects")
-            # Clean up mutated objects.
-            _,r = P.indices.pop()
-            pathway_id = r2p[P.resources[r]]
-            if s: s[pathway_id].pop()
-            if p2s[pathway_id]: p2s[pathway_id].pop()
-
-        print()
-        backtrack(root(P))
+        solutions = pathways_solver.solve(self.shapes, pathways)
         self.assignments = random.choice(solutions)
         return solutions
 
