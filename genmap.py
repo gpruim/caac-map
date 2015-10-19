@@ -6,6 +6,7 @@ import traceback
 import itertools as it
 import uuid
 from math import ceil, sqrt, factorial
+import pickle
 
 import pathways_solver
 
@@ -380,7 +381,7 @@ def err(*a, **kw):
     print(file=sys.stderr, *a, **kw)
 
 
-def main(topics, charset, width, height, alley_width, building_min):
+def generate_map(topics, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     street_width = alley_width * 10
@@ -417,11 +418,10 @@ def main(topics, charset, width, height, alley_width, building_min):
                                          , aspect_min=0.2
                                          , monkeys=True
                                           )))
+    return big, blocks
 
 
-    # Generate a combined SVG.
-    # ========================
-
+def output_svg(big, blocks):
     half_W = big.W / 2
     half_H = big.H / 2
     rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
@@ -436,7 +436,7 @@ def main(topics, charset, width, height, alley_width, building_min):
     print('  <g transform="translate({} {}) rotate(45 {} {})">'
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
-    offset = street_width // 2
+    offset = big.alley_width // 2
     for uid, block in blocks:
         x, y, shape = big.shapes[uid]
         subtopics = topics[uid]['subtopics'].values()
@@ -492,6 +492,29 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, 
         if nremaining == 0 and m.remaining_area == 0:
             break
     return m
+
+
+def dump(big, blocks):
+    pickle.dump([big] + blocks, open('output/map.cache', 'bw+'))
+
+
+def load():
+    big, blocks = None, None
+    try:
+        inp = pickle.load(open('output/map.cache', 'br'))
+        big = inp[0]
+        blocks = inp[1:]
+    except FileNotFoundError:
+        pass
+    return big, blocks
+
+
+def main(*a, **kw):
+    big, blocks = load()
+    if blocks is None:
+        big, blocks = generate_map(*a, **kw)
+        dump(big, blocks)
+    output_svg(big, blocks)
 
 
 if __name__ == '__main__':
