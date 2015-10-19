@@ -624,13 +624,35 @@ def test_ai_assigns_ids():
     assert m.assignments == {}
     solutions = m.assign_ids({'art': ['deadbeef', 'beeffeed']}, take_first=False)
     assert solutions == [ {'art': [('a', 'deadbeef'), ('b', 'beeffeed')]}
-                        , {'art': [('b', 'deadbeef'), ('a', 'beeffeed')]}
                         , {'art': [('a', 'beeffeed'), ('b', 'deadbeef')]}
+                        , {'art': [('b', 'deadbeef'), ('a', 'beeffeed')]}
                         , {'art': [('b', 'beeffeed'), ('a', 'deadbeef')]}
                          ]
     assert m.assignments in solutions
 
-def test_ai_handles_two_pathways():
+def test_ai_handles_two_simple_pathways():
+    m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
+    m.add(5, 'a', shape_choice=1)
+    m.add(5, 'b')
+    assert str(m) == """\
+----------------
+----------------
+--#####--#####--
+--#####--#####--
+--#####--#####--
+--#####--#####--
+----------------
+----------------"""
+    assert m.assignments == {}
+    solutions = m.assign_ids({'art': ['x'], 'science': ['y']}, take_first=False)
+    assert solutions == [ {'art': [('a', 'x')], 'science': [('b', 'y')]}
+                       #, {'art': [('a', 'y')], 'science': [('b', 'x')]}
+                        , {'art': [('b', 'x')], 'science': [('a', 'y')]}
+                       #, {'art': [('b', 'y')], 'science': [('a', 'x')]}
+                         ]
+    assert m.assignments in solutions
+
+def test_ai_handles_two_pathways_with_multiple_elements():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=84, building_min=1)
     m.add(24, 'a')
     m.add(30, 'b', shape_choice=0)

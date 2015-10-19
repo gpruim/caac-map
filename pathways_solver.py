@@ -33,6 +33,7 @@ class Problem(object):
 
     depth = -1
     ncalls = 0
+    last_pathway_assignment = None
 
     def __init__(self, shapes, pathways):
         """Instantiate a pathways assignment problem.
@@ -71,7 +72,10 @@ class Problem(object):
         self.p2s = {k:[] for k in pathways}
 
         # Maintain indices into shapes and resources for the current node while backtracking.
-        self.indices = []  # pairs of (shape_index, resource_index) per level
+        self.pairs = []  # pairs of (shape_index, resource_index)
+        self.shape_pool = set(range(self.n))
+        self.resource_pool = set(range(self.n))
+        self.siblings = []  # stack of siblings generators
 
         # We'll accumulate solutions into a list.
         self.solutions = []
@@ -85,31 +89,26 @@ class Problem(object):
         self.loglines += 1
         msg, a = (a[0], a[1:]) if len(a) else ('', a)
         kw['file'] = self.logfile
-        print('{:>2} {}{}'.format( self.loglines
-                                 , '| '*self.depth
-                                 , msg.ljust(24-(2*self.depth)))
-                                 , *a
-                                 , **kw
-                                  )
-
-    def clean_up(self, s):
-        """Clean up mutated objects.
-        """
-        if self.indices:
-            _,r = self.indices.pop()
-            self.log('\ pop {}'.format((_,r)), self.indices)
-            if self.r2p:
-                pathway_id = self.r2p[self.resources[r]]
-                if s:
-                    s[pathway_id].pop()
-                if self.p2s[pathway_id]:
-                    self.p2s[pathway_id].pop()
+        print('{:>2} {} {} {} {}'
+              .format( self.loglines
+                     , '| '*self.depth
+                     , msg.ljust(24-(2*self.depth))
+                     , len(self.siblings)
+                     , len(self.solutions)
+                      ), *a, **kw)
 
 
 def solve(shapes, pathways):
     problem = Problem(shapes, pathways)
     backtrack(problem, root(problem))
-    return problem.solutions
+    seen = []
+    for solution in problem.solutions:
+        for d in seen:
+            if solution == d:
+                break
+        else:
+            seen.append(solution)
+    return seen
 
 
 # Backtracking Algorithm
@@ -120,12 +119,25 @@ def root(P):
     return {k:[] for k in P.pathways}
 
 def reject(P, c):
-    if not P.indices:
+    if not P.pairs:
         assert flatten(c) == tuple()  # first case, root
         return False
 
-    s,r = P.indices[-1]
+    s,r = P.pairs[-1]
     shape_id, resource_id = P.shapes[s], P.resources[r]
+
+
+    # Check for pathway containment.
+    # ==============================
+
+    if P.r2p[resource_id] != P.last_pathway_assignment:
+        P.log("{} not in {}!".format(resource_id, P.r2p[resource_id]))
+        return True
+
+
+    # Check for edge crossings.
+    # =========================
+
     shape = P.s2shape[shape_id]
     center = get_center(shape)
     pathway_id = P.r2p[resource_id]
@@ -149,59 +161,80 @@ def accept(P, c):
 
 def output(P, c):
     P.solutions.append({k:v[:] for k,v in c.items()})  # be sure to copy it!
+    P.log('a solution!', sorted(P.solutions[-1].items()))
 
 def first(P, c):
-    #P.log("first", P.indices)
-    if len(P.indices) == P.n:
+    P.siblings.append(it.product(sorted(P.shape_pool), sorted(P.resource_pool)))
+    try:
+        s,r = next(P.siblings[-1])
+    except StopIteration:
+        P.siblings.pop()  # this is a null iterator, throw it away!
         return None  # base case
-    elif not P.indices:
-        s,r = (0,0)  # root case
-    else:
-        s,r = P.indices[-1]
-        s += 1
-        r += 1
-        if s == P.n: s = 0
-        if r == P.n: r = 0
-    P.indices.append((s,r))
-    P.log('\ append {}'.format((s,r)), P.indices)
+    P.shape_pool.remove(s)
+    P.resource_pool.remove(r)
+    P.pairs.append((s,r))
+    P.log('\ append {}'.format((s,r)), P.pairs)
     shape_id, resource_id = P.shapes[s], P.resources[r]
-    c[P.r2p[resource_id]].append((shape_id, resource_id))
+    pathway_id = P.r2p[resource_id]
+    c[pathway_id].append((shape_id, resource_id))
+    P.last_pathway_assignment = pathway_id
     return c
 
-def next(P, sibling):
-    if not P.indices:
+def next_(P, sibling):
+    if not P.pairs:
+        return None  # root case
+
+    s,r = P.pairs[-1]
+    P.log('| seek {}'.format((s,r)), P.pairs)
+    P.shape_pool.add(s)
+    P.resource_pool.add(r)
+    sibling[P.r2p[P.resources[r]]].pop()
+
+    try:
+        s,r = next(P.siblings[-1])
+    except StopIteration:
         return None  # base case
-    s,r = P.indices[-1]
-    P.log('| seek {}'.format((s,r)), P.indices)
-    s += 1
-    if s == P.n:
-        s = 0
-        r += 1
-        if r == P.n:
-            return None  # base case
-    P.indices[-1] = (s,r)
-    P.log('\ set {}'.format((s,r)), P.indices)
+
+    P.shape_pool.remove(s)
+    P.resource_pool.remove(r)
+    P.pairs[-1] = (s,r)
     shape_id, resource_id = P.shapes[s], P.resources[r]
-    #P.log("next", shape_id, resource_id)
-    sibling[P.r2p[resource_id]][-1] = (shape_id, resource_id)
+
+    pathway_id = P.r2p[resource_id]
+    P.last_pathway_assignment = pathway_id
+    pathway = sibling[pathway_id]
+    if pathway:
+        pathway[-1] = (shape_id, resource_id)
+    else:
+        pathway.append((shape_id, resource_id))
+
+    P.log('\ set {}'.format((s,r)), P.pairs, sorted(sibling.items()))
     return sibling
+
+def clean_up(P, c):
+    """Clean up mutated objects. This is an extension to Wikipedia's backtrack algorithm.
+    """
+    if not P.pairs: return  # root case
+    P.siblings.pop()
+    s,r = P.pairs.pop()
+    P.shape_pool.add(s)
+    P.resource_pool.add(r)
+    if P.r2p:
+        pathway_id = P.r2p[P.resources[r]]
+        if c and c[pathway_id]:
+            c[pathway_id].pop()
+        if P.p2s[pathway_id]:
+            P.p2s[pathway_id].pop()
+    P.log('\ pop {}'.format((s,r)), P.pairs, sorted(c.items()))
 
 def backtrack(P, c):
     P.ncalls += 1
     P.depth += 1
-    #P.log("Call #{}".format(P.ncalls), c)
     if reject(P, c): return
     if accept(P, c): output(P, c)
-    #P.log("Solutions:", len(P.solutions))
     s = first(P, c)
-    #P.log("First child:", s)
     while s:
-        #P.log()
         backtrack(P, s)
-        #P.log()
-        #P.log("Prev sibling:", s)
-        s = next(P, s)
-        #P.log("Next sibling:", s)
-    #P.log("Cleaning up.")
-    P.clean_up(c)
+        s = next_(P, s)
+    clean_up(P, c)
     P.depth -= 1
