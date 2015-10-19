@@ -33,7 +33,7 @@ class Problem(object):
 
     depth = -1
     ncalls = 0
-    last_pathway_assignment = None
+    latest_pathway_assignment = None
 
     def __init__(self, shapes, pathways):
         """Instantiate a pathways assignment problem.
@@ -69,7 +69,7 @@ class Problem(object):
               self.r2p[val] = k
 
         # And let's maintain a list of segments for each pathway.
-        self.p2s = {k:[] for k in pathways}
+        self.segments = {k:[] for k in pathways}
 
         # Maintain indices into shapes and resources for the current node while backtracking.
         self.pairs = []  # pairs of (shape_index, resource_index)
@@ -101,14 +101,19 @@ class Problem(object):
 def solve(shapes, pathways):
     problem = Problem(shapes, pathways)
     backtrack(problem, root(problem))
-    seen = []
+
+    # XXX Now do goofy deduplication. We should be able to prune these or
+    # something during backtracking.
+
+    solutions = []
     for solution in problem.solutions:
-        for d in seen:
+        for d in solutions:
             if solution == d:
                 break
         else:
-            seen.append(solution)
-    return seen
+            solutions.append(solution)
+
+    return solutions
 
 
 # Backtracking Algorithm
@@ -130,8 +135,8 @@ def reject(P, c):
     # Check for pathway containment.
     # ==============================
 
-    if P.r2p[resource_id] != P.last_pathway_assignment:
-        P.log("{} not in {}!".format(resource_id, P.r2p[resource_id]))
+    if P.r2p[resource_id] != P.latest_pathway_assignment:
+        P.log('reject', "{} not in {}!".format(resource_id, P.r2p[resource_id]))
         return True
 
 
@@ -141,7 +146,7 @@ def reject(P, c):
     shape = P.s2shape[shape_id]
     center = get_center(shape)
     pathway_id = P.r2p[resource_id]
-    segments = P.p2s[pathway_id]
+    segments = P.segments[pathway_id]
     nsegments = len(segments)
 
     if nsegments == 0:      # First point: start a segment.
@@ -151,7 +156,7 @@ def reject(P, c):
     else:                   # We're off and running: validate segments.
         segment = get_valid_segment(segments, center)
         if segment is None:
-            P.log("Rejecting!")
+            P.log('reject', 'cross')
             return True
         segments.append(segment)
     return False
@@ -173,11 +178,11 @@ def first(P, c):
     P.shape_pool.remove(s)
     P.resource_pool.remove(r)
     P.pairs.append((s,r))
-    P.log('\ append {}'.format((s,r)), P.pairs)
     shape_id, resource_id = P.shapes[s], P.resources[r]
     pathway_id = P.r2p[resource_id]
     c[pathway_id].append((shape_id, resource_id))
-    P.last_pathway_assignment = pathway_id
+    P.latest_pathway_assignment = pathway_id
+    P.log('\ append {}'.format((s,r)), P.pairs, sorted(c.items()))
     return c
 
 def next_(P, sibling):
@@ -188,7 +193,9 @@ def next_(P, sibling):
     P.log('| seek {}'.format((s,r)), P.pairs)
     P.shape_pool.add(s)
     P.resource_pool.add(r)
-    sibling[P.r2p[P.resources[r]]].pop()
+
+    old_pathway_id = P.r2p[P.resources[r]]
+    old_pathway = sibling[old_pathway_id]
 
     try:
         s,r = next(P.siblings[-1])
@@ -200,13 +207,14 @@ def next_(P, sibling):
     P.pairs[-1] = (s,r)
     shape_id, resource_id = P.shapes[s], P.resources[r]
 
-    pathway_id = P.r2p[resource_id]
-    P.last_pathway_assignment = pathway_id
-    pathway = sibling[pathway_id]
-    if pathway:
-        pathway[-1] = (shape_id, resource_id)
+    new_pathway_id = P.latest_pathway_assignment = P.r2p[resource_id]
+    new_pathway = sibling[new_pathway_id]
+
+    if new_pathway is old_pathway:
+        new_pathway[-1] = (shape_id, resource_id)
     else:
-        pathway.append((shape_id, resource_id))
+        old_pathway.pop()
+        new_pathway.append((shape_id, resource_id))
 
     P.log('\ set {}'.format((s,r)), P.pairs, sorted(sibling.items()))
     return sibling
@@ -223,8 +231,9 @@ def clean_up(P, c):
         pathway_id = P.r2p[P.resources[r]]
         if c and c[pathway_id]:
             c[pathway_id].pop()
-        if P.p2s[pathway_id]:
-            P.p2s[pathway_id].pop()
+        if P.segments[pathway_id]:
+            P.log('popping segment for', pathway_id)
+            P.segments[pathway_id].pop()
     P.log('\ pop {}'.format((s,r)), P.pairs, sorted(c.items()))
 
 def backtrack(P, c):

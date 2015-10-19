@@ -667,13 +667,19 @@ def test_ai_handles_two_pathways_with_multiple_elements():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    solutions = m.assign_ids({'art': ['beef', 'dead'], 'science': ['feed']}, take_first=False)
-    assert solutions == [ {'art': [('a', 'beef'), ('b', 'dead')], 'science': [('c', 'feed')]}
-                        , {'art': [('a', 'beef'), ('c', 'dead')], 'science': [('b', 'feed')]}
-                        , {'art': [('b', 'beef'), ('a', 'dead')], 'science': [('c', 'feed')]}
-                        , {'art': [('b', 'beef'), ('c', 'dead')], 'science': [('a', 'feed')]}
-                        , {'art': [('c', 'beef'), ('a', 'dead')], 'science': [('b', 'feed')]}
-                        , {'art': [('c', 'beef'), ('b', 'dead')], 'science': [('a', 'feed')]}
+    solutions = m.assign_ids({'art': ['x', 'y'], 'science': ['z']}, take_first=False)
+    assert solutions == [ {'art': [('a', 'x'), ('b', 'y')], 'science': [('c', 'z')]}
+                        , {'art': [('a', 'x'), ('c', 'y')], 'science': [('b', 'z')]}
+                        , {'art': [('a', 'y'), ('b', 'x')], 'science': [('c', 'z')]}
+                        , {'art': [('a', 'y'), ('c', 'x')], 'science': [('b', 'z')]}
+                        , {'art': [('b', 'x'), ('c', 'y')], 'science': [('a', 'z')]}
+                        , {'art': [('b', 'y'), ('c', 'x')], 'science': [('a', 'z')]}
+                        , {'art': [('c', 'x'), ('b', 'y')], 'science': [('a', 'z')]}
+                        , {'art': [('c', 'y'), ('b', 'x')], 'science': [('a', 'z')]}
+                        , {'art': [('b', 'x'), ('a', 'y')], 'science': [('c', 'z')]}
+                        , {'art': [('b', 'y'), ('a', 'x')], 'science': [('c', 'z')]}
+                        , {'art': [('c', 'x'), ('a', 'y')], 'science': [('b', 'z')]}
+                        , {'art': [('c', 'y'), ('a', 'x')], 'science': [('b', 'z')]}
                          ]
     assert m.assignments in solutions
 
@@ -693,34 +699,40 @@ def test_ai_doesnt_cross_pathways():
 ----------------
 ----------------"""
     assert m.assignments == {}
-    pathway = {'art': ['dead', 'beef', 'deed', 'feed']}
-    solutions = [ {'art': [('a', 'dead'), ('b', 'beef'), ('c', 'deed'), ('d', 'feed')]}
-                , {'art': [('a', 'dead'), ('b', 'beef'), ('d', 'deed'), ('c', 'feed')]}
-               #, {'art': [('a', 'dead'), ('c', 'beef'), ('b', 'deed'), ('d', Nope)]}
-               #, {'art': [('a', 'dead'), ('c', 'beef'), ('d', 'deed'), ('b', Nope)]}
-                , {'art': [('a', 'dead'), ('d', 'beef'), ('b', 'deed'), ('c', 'feed')]}
-                , {'art': [('a', 'dead'), ('d', 'beef'), ('c', 'deed'), ('b', 'feed')]}
+    pathway = {'art': ['w', 'x', 'y', 'z']}
+    expected = [ {'art': [('a', 'w'), ('b', 'x'), ('c', 'y'), ('d', 'z')]}
+               , {'art': [('a', 'w'), ('b', 'x'), ('d', 'y'), ('c', 'z')]}
+              #, {'art': [('a', 'w'), ('c', 'x'), ('b', 'y'), ('d', Nope)]}
+              #, {'art': [('a', 'w'), ('c', 'x'), ('d', 'y'), ('b', Nope)]}
+               , {'art': [('a', 'w'), ('d', 'x'), ('b', 'y'), ('c', 'z')]}
+               , {'art': [('a', 'w'), ('d', 'x'), ('c', 'y'), ('b', 'z')]}
 
-                , {'art': [('b', 'dead'), ('a', 'beef'), ('c', 'deed'), ('d', 'feed')]}
-                , {'art': [('b', 'dead'), ('a', 'beef'), ('d', 'deed'), ('c', 'feed')]}
-                , {'art': [('b', 'dead'), ('c', 'beef'), ('a', 'deed'), ('d', 'feed')]}
-                , {'art': [('b', 'dead'), ('c', 'beef'), ('d', 'deed'), ('a', 'feed')]}
-               #, {'art': [('b', 'dead'), ('d', 'beef'), ('a', 'deed'), ('c', Nope)]}
-               #, {'art': [('b', 'dead'), ('d', 'beef'), ('c', 'deed'), ('a', Nope)]}
+               , {'art': [('b', 'w'), ('a', 'x'), ('c', 'y'), ('d', 'z')]}
+               , {'art': [('b', 'w'), ('a', 'x'), ('d', 'y'), ('c', 'z')]}
+               , {'art': [('b', 'w'), ('c', 'x'), ('a', 'y'), ('d', 'z')]}
+               , {'art': [('b', 'w'), ('c', 'x'), ('d', 'y'), ('a', 'z')]}
+              #, {'art': [('b', 'w'), ('d', 'x'), ('a', 'y'), ('c', Nope)]}
+              #, {'art': [('b', 'w'), ('d', 'x'), ('c', 'y'), ('a', Nope)]}
 
-               #, {'art': [('c', 'dead'), ('a', 'beef'), ('b', 'deed'), ('d', Nope)]}
-               #, {'art': [('c', 'dead'), ('a', 'beef'), ('d', 'deed'), ('b', Nope)]}
-                , {'art': [('c', 'dead'), ('b', 'beef'), ('a', 'deed'), ('d', 'feed')]}
-                , {'art': [('c', 'dead'), ('b', 'beef'), ('d', 'deed'), ('a', 'feed')]}
-                , {'art': [('c', 'dead'), ('d', 'beef'), ('a', 'deed'), ('b', 'feed')]}
-                , {'art': [('c', 'dead'), ('d', 'beef'), ('b', 'deed'), ('a', 'feed')]}
+              #, {'art': [('c', 'w'), ('a', 'x'), ('b', 'y'), ('d', Nope)]}
+              #, {'art': [('c', 'w'), ('a', 'x'), ('d', 'y'), ('b', Nope)]}
+               , {'art': [('c', 'w'), ('b', 'x'), ('a', 'y'), ('d', 'z')]}
+               , {'art': [('c', 'w'), ('b', 'x'), ('d', 'y'), ('a', 'z')]}
+               , {'art': [('c', 'w'), ('d', 'x'), ('a', 'y'), ('b', 'z')]}
+               , {'art': [('c', 'w'), ('d', 'x'), ('b', 'y'), ('a', 'z')]}
 
-                , {'art': [('d', 'dead'), ('a', 'beef'), ('b', 'deed'), ('c', 'feed')]}
-                , {'art': [('d', 'dead'), ('a', 'beef'), ('c', 'deed'), ('b', 'feed')]}
-               #, {'art': [('d', 'dead'), ('b', 'beef'), ('a', 'deed'), ('c', Nope)]}
-               #, {'art': [('d', 'dead'), ('b', 'beef'), ('c', 'deed'), ('a', Nope)]}
-                , {'art': [('d', 'dead'), ('c', 'beef'), ('a', 'deed'), ('b', 'feed')]}
-                , {'art': [('d', 'dead'), ('c', 'beef'), ('b', 'deed'), ('a', 'feed')]}
-                 ]
+               , {'art': [('d', 'w'), ('a', 'x'), ('b', 'y'), ('c', 'z')]}
+               , {'art': [('d', 'w'), ('a', 'x'), ('c', 'y'), ('b', 'z')]}
+              #, {'art': [('d', 'w'), ('b', 'x'), ('a', 'y'), ('c', Nope)]}
+              #, {'art': [('d', 'w'), ('b', 'x'), ('c', 'y'), ('a', Nope)]}
+               , {'art': [('d', 'w'), ('c', 'x'), ('a', 'y'), ('b', 'z')]}
+               , {'art': [('d', 'w'), ('c', 'x'), ('b', 'y'), ('a', 'z')]}
+                ]
     actual = m.assign_ids(pathway, take_first=False)
-    assert actual == solutions
+
+    # Reduce the set of actual down to those where w,x,y,z are in order, since the order of the
+    # assignment doesn't actually matter to what we're trying to test here.
+
+    actual = list(filter(lambda a: [b[1] for b in a['art']] == list('wxyz'), actual))
+
+    assert actual == expected
