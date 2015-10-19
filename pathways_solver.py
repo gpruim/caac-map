@@ -19,14 +19,9 @@ def get_center(shape):
     x,y, (w,h) = shape
     return Point(x + w/2, y + h/2)
 
-def get_valid_segment(segments, point):
+def get_valid_segment(P, segments, point):
     """Given a list of segments and a point, return a segment or None.
     """
-    candidate = Segment(segments[-1].point2, point)
-    for segment in reversed(segments[:-1]):
-        if candidate.distance_from(segment) <= 1:
-            return None
-    return candidate
 
 
 class Problem(object):
@@ -132,33 +127,17 @@ def reject(P, c):
     shape_id, resource_id = P.shapes[s], P.resources[r]
 
 
-    # Check for pathway containment.
-    # ==============================
-
-    if P.r2p[resource_id] != P.latest_pathway_assignment:
-        P.log('reject', "{} not in {}!".format(resource_id, P.r2p[resource_id]))
-        return True
-
-
     # Check for edge crossings.
     # =========================
 
-    shape = P.s2shape[shape_id]
-    center = get_center(shape)
     pathway_id = P.r2p[resource_id]
     segments = P.segments[pathway_id]
-    nsegments = len(segments)
 
-    if nsegments == 0:      # First point: start a segment.
-        segments.append(Segment(center, center))
-    elif nsegments == 1:    # Second point: finish the first segment.
-        segments[0].point2 = center
-    else:                   # We're off and running: validate segments.
-        segment = get_valid_segment(segments, center)
-        if segment is None:
-            P.log('reject', 'cross')
-            return True
-        segments.append(segment)
+    if len(segments) > 2:
+        last_segment = segments[-1]
+        for earlier_segment in reversed(segments[:-2]):
+            if last_segment.distance_from(earlier_segment) <= 1:
+                return True
     return False
 
 def accept(P, c):
@@ -166,7 +145,6 @@ def accept(P, c):
 
 def output(P, c):
     P.solutions.append({k:v[:] for k,v in c.items()})  # be sure to copy it!
-    P.log('a solution!', sorted(P.solutions[-1].items()))
 
 def first(P, c):
     P.siblings.append(it.product(sorted(P.shape_pool), sorted(P.resource_pool)))
@@ -175,14 +153,25 @@ def first(P, c):
     except StopIteration:
         P.siblings.pop()  # this is a null iterator, throw it away!
         return None  # base case
+
     P.shape_pool.remove(s)
     P.resource_pool.remove(r)
     P.pairs.append((s,r))
     shape_id, resource_id = P.shapes[s], P.resources[r]
-    pathway_id = P.r2p[resource_id]
+    pathway_id = P.latest_pathway_assignment = P.r2p[resource_id]
     c[pathway_id].append((shape_id, resource_id))
-    P.latest_pathway_assignment = pathway_id
-    P.log('\ append {}'.format((s,r)), P.pairs, sorted(c.items()))
+    center = get_center(P.s2shape[shape_id])
+    segments = P.segments[pathway_id]
+
+    if not segments:                                    # First point: start a segment.
+        segments.append(Segment(center, center))
+    elif segments[-1].point1 is segments[-1].point2:    # Second point: finish the first segment.
+        segments[-1].point2 = center
+    else:                                               # We're off and running: validate segments.
+        previous_point = segments[-1].point2
+        segments.append(Segment(previous_point, center))
+
+    P.log('\ append {}'.format((s,r)), P.pairs, P.segments)
     return c
 
 def next_(P, sibling):
@@ -194,8 +183,9 @@ def next_(P, sibling):
     P.shape_pool.add(s)
     P.resource_pool.add(r)
 
-    old_pathway_id = P.r2p[P.resources[r]]
-    old_pathway = sibling[old_pathway_id]
+    _old = P.r2p[P.resources[r]]
+    old_pathway = sibling[_old]
+    old_segments = P.segments[_old]
 
     try:
         s,r = next(P.siblings[-1])
@@ -206,17 +196,41 @@ def next_(P, sibling):
     P.resource_pool.remove(r)
     P.pairs[-1] = (s,r)
     shape_id, resource_id = P.shapes[s], P.resources[r]
+    center = get_center(P.s2shape[shape_id])
 
-    new_pathway_id = P.latest_pathway_assignment = P.r2p[resource_id]
-    new_pathway = sibling[new_pathway_id]
+    _new = P.latest_pathway_assignment = P.r2p[resource_id]
+    new_pathway = sibling[_new]
+    new_segments = P.segments[_new]
 
-    if new_pathway is old_pathway:
+    if new_pathway is old_pathway:      # Same pathway, overwrite.
         new_pathway[-1] = (shape_id, resource_id)
-    else:
+        if new_segments:
+            new_segments[-1].point2 = center
+        else:
+            new_segments.append(Segment(center, center))
+    else:                               # Different pathway, undo there and add here.
+        # Undo old ...
         old_pathway.pop()
-        new_pathway.append((shape_id, resource_id))
+        if not old_segments:
+            pass
+        elif len(old_segments) == 1 and not (old_segments[0].point2 is old_segments[0].point1):
+            old_segments[0].point2 = old_segments[0].point1
+        else:
+            old_segments.pop()
 
-    P.log('\ set {}'.format((s,r)), P.pairs, sorted(sibling.items()))
+        # Do new ...
+        new_pathway.append((shape_id, resource_id))
+        if not new_segments:
+            pass
+        elif new_segments[-1].point1 is new_segments[-1].point2:
+            # Second point: finish the first segment.
+            new_segments[-1].point2 = center
+        else:
+            # We're off and running: validate segments.
+            previous_point = new_segments[-1].point2
+            new_segments.append(Segment(previous_point, center))
+
+    P.log('\ set {}'.format((s,r)), P.pairs)
     return sibling
 
 def clean_up(P, c):
@@ -232,9 +246,8 @@ def clean_up(P, c):
         if c and c[pathway_id]:
             c[pathway_id].pop()
         if P.segments[pathway_id]:
-            P.log('popping segment for', pathway_id)
             P.segments[pathway_id].pop()
-    P.log('\ pop {}'.format((s,r)), P.pairs, sorted(c.items()))
+    P.log('\ pop {}'.format((s,r)), P.pairs)
 
 def backtrack(P, c):
     P.ncalls += 1

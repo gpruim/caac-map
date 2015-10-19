@@ -42,6 +42,9 @@ class Point(object):
         self.x = x
         self.y = y
         self.z = z
+    def __str__(self):
+        return '<Point {}: {}, {}>'.format(id(self), self.x, self.y)
+    __repr__ = __str__
     def __add__(self, other):
         return Point(self.x + other.x, self.y+other.y, self.z+other.z)
     def __sub__(self, other):
@@ -70,6 +73,16 @@ class Segment(object):
     def __init__(self, point1, point2):
         self.point1 = point1
         self.point2 = point2
+
+    def __str__(self):
+        return ('<Segment {} ({}, {}) -> ({}, {})>'
+                .format( id(self)
+                       , self.point1.x
+                       , self.point1.y
+                       , self.point2.x
+                       , self.point2.y
+                        ))
+    __repr__ = __str__
 
     def distance_from(self, other):
         """Return shortest distance between two segments.
