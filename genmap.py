@@ -87,8 +87,11 @@ class MagnitudeMap(list):
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
         for uid, (x, y, (w, h)) in self.shapes.items():
+            uid = self.assignments.get(uid)
+            if uid is None:
+                continue
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
-                   .format( self.assignments.get(uid, uid)
+                   .format( uid
                           , x+self.half_alley
                           , y+self.half_alley
                           , w-self.alley_width
@@ -362,8 +365,8 @@ class MagnitudeMap(list):
     def assign_ids(self, pathways, take_first=True):
         """Given a pathways data structure, assign resources to shapes.
         """
-        solutions = pathways_solver.solve(self.shapes, pathways)
-        self.assignments = random.choice(solutions)
+        solutions = pathways_solver.solve(self.shapes, pathways, take_first)
+        self.assignments = dict(pathways_solver.flatten(random.choice(solutions)))
         return solutions
 
 

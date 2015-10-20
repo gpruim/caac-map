@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import itertools as it
+from operator import mul
+from functools import reduce
 
 from geometry import Point, Segment
 
@@ -13,24 +15,33 @@ def flatten(pathways):
     """
     return tuple(it.chain(*[p[1] for p in sorted(pathways.items())]))
 
+
 def get_center(shape):
     """Given a shape, return a Point for the center of it.
     """
     x,y, (w,h) = shape
     return Point(x + w/2, y + h/2)
 
-def get_valid_segment(P, segments, point):
-    """Given a list of segments and a point, return a segment or None.
-    """
+
+square = lambda x: x ** 2
+
+def count_possible_solutions(level):
+    return reduce(mul, map(square, range(1, level)), 1)
+
+def count_nodes(level):
+    return 1 + sum(reduce(mul, map(square, range(v, level)), 1) for v in range(1, level))
+
+
+class FirstSolutionFound(Exception): pass
+class NoSolutionFound(Exception): pass
 
 
 class Problem(object):
 
     depth = -1
-    ncalls = 0
     latest_pathway_assignment = None
 
-    def __init__(self, shapes, pathways):
+    def __init__(self, shapes, pathways, take_first=False):
         """Instantiate a pathways assignment problem.
 
         The problem definition is given in a shapes dictionary, mapping shape
@@ -50,9 +61,17 @@ class Problem(object):
         """
         self.shapes = tuple(sorted(shapes))
         self.pathways = pathways
+        self.take_first = take_first  # whether to raise after the first solution is found
         self.resources = flatten(pathways)
-        self.n = len(self.shapes)
-        assert len(self.resources) == self.n
+        #XXX bad data! assert len(self.resources) == self.nlevels, (self.resources, self.nlevels, shapes, pathways)
+
+        nlevels = len(self.shapes)
+        self.stats = { 'ncalls': 0
+                     , 'nlevels': nlevels
+                     , 'nsolutions': 0
+                     , 'npossible_solutions': count_possible_solutions(nlevels)
+                     , 'nnodes': count_nodes(nlevels)
+                      }
 
         # Make sure we can access shape definitions by id.
         self.s2shape = shapes
@@ -68,8 +87,8 @@ class Problem(object):
 
         # Maintain indices into shapes and resources for the current node while backtracking.
         self.pairs = []  # pairs of (shape_index, resource_index)
-        self.shape_pool = set(range(self.n))
-        self.resource_pool = set(range(self.n))
+        self.shape_pool = set(range(nlevels))
+        self.resource_pool = set(range(nlevels))
         self.siblings = []  # stack of siblings generators
 
         # We'll accumulate solutions into a list.
@@ -84,6 +103,7 @@ class Problem(object):
         self.loglines += 1
         msg, a = (a[0], a[1:]) if len(a) else ('', a)
         kw['file'] = self.logfile
+        kw['flush'] = True
         print('{:>2} {} {} {} {}'
               .format( self.loglines
                      , '| '*self.depth
@@ -93,12 +113,22 @@ class Problem(object):
                       ), *a, **kw)
 
 
-def solve(shapes, pathways):
-    problem = Problem(shapes, pathways)
-    backtrack(problem, root(problem))
+def solve(shapes, pathways, take_first=False):
+    problem = Problem(shapes, pathways, take_first)
+    try:
+        backtrack(problem, root(problem))
+    except FirstSolutionFound as exc:
+        solution = exc.args[0]
+        return [solution]
+
+    if not problem.solutions:
+        raise NoSolutionFound()
 
     # XXX Now do goofy deduplication. We should be able to prune these or
-    # something during backtracking.
+    # something during backtracking. We have duplicates because of the way we
+    # constrain pathway assignment based on resource id, so that both [(0,0),
+    # (1,1)] and [(1,1), (0,0)] result in the same solution if r=0 and 1
+    # dereference to resources that are in different pathways.
 
     solutions = []
     for solution in problem.solutions:
@@ -141,10 +171,20 @@ def reject(P, c):
     return False
 
 def accept(P, c):
-    return len(flatten(c)) == P.n
+    threshold = 1 - (P.stats['ncalls'] / 100000)
+    if P.depth / P.stats['nlevels'] > threshold:
+        print("Accepting a {:.0f}% solution after {} nodes."
+              .format((P.depth / P.stats['nlevels']) * 100, P.stats['ncalls']))
+        return True
+    return False
 
 def output(P, c):
-    P.solutions.append({k:v[:] for k,v in c.items()})  # be sure to copy it!
+    solution = {k:v[:] for k,v in c.items()}  # be sure to copy it!
+    P.stats['nsolutions'] += 1
+    if P.take_first:
+        raise FirstSolutionFound(solution)
+    else:
+        P.solutions.append(solution)
 
 def first(P, c):
     P.siblings.append(it.product(sorted(P.shape_pool), sorted(P.resource_pool)))
@@ -171,7 +211,6 @@ def first(P, c):
         previous_point = segments[-1].point2
         segments.append(Segment(previous_point, center))
 
-    P.log('\ append {}'.format((s,r)), P.pairs, P.segments)
     return c
 
 def next_(P, sibling):
@@ -179,7 +218,6 @@ def next_(P, sibling):
         return None  # root case
 
     s,r = P.pairs[-1]
-    P.log('| seek {}'.format((s,r)), P.pairs)
     P.shape_pool.add(s)
     P.resource_pool.add(r)
 
@@ -230,7 +268,6 @@ def next_(P, sibling):
             previous_point = new_segments[-1].point2
             new_segments.append(Segment(previous_point, center))
 
-    P.log('\ set {}'.format((s,r)), P.pairs)
     return sibling
 
 def clean_up(P, c):
@@ -247,16 +284,21 @@ def clean_up(P, c):
             c[pathway_id].pop()
         if P.segments[pathway_id]:
             P.segments[pathway_id].pop()
-    P.log('\ pop {}'.format((s,r)), P.pairs)
 
 def backtrack(P, c):
-    P.ncalls += 1
-    P.depth += 1
-    if reject(P, c): return
+    P.stats['ncalls'] += 1
+    if P.stats['ncalls'] % 10000 == 0:
+        print('{depth} / {nlevels} | {ncalls} / {nnodes} | {nsolutions} / {npossible_solutions}'
+              .format(depth=P.depth, **P.stats))
+    if reject(P, c):
+        P.stats['npossible_solutions'] -= count_possible_solutions(P.stats['nlevels'] - P.depth)
+        P.stats['nnodes'] -= count_nodes(P.stats['nlevels'] - P.depth)
+        return
     if accept(P, c): output(P, c)
     s = first(P, c)
     while s:
+        P.depth += 1
         backtrack(P, s)
+        P.depth -= 1
         s = next_(P, s)
     clean_up(P, c)
-    P.depth -= 1
