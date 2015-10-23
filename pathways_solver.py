@@ -23,6 +23,14 @@ def get_center(name, shape):
     x,y, (w,h) = shape
     return Point(x + w/2, y + h/2, name=name)
 
+def add_point_to_segments(point, segments):
+    if not segments:                                    # First point: start a segment.
+        segments.append(Segment(point, point))
+    elif segments[-1].point1 is segments[-1].point2:    # Second point: finish the first segment.
+        segments[-1].point2 = point
+    else:                                               # We're off and running: validate segments.
+        previous_point = segments[-1].point2
+        segments.append(Segment(previous_point, point))
 
 square = lambda x: x ** 2
 
@@ -210,14 +218,7 @@ def first(P, c):
     c[pathway_id].append((shape_id, resource_id))
     center = get_center(resource_id, P.s2shape[shape_id])
     segments = P.segments[pathway_id]
-
-    if not segments:                                    # First point: start a segment.
-        segments.append(Segment(center, center))
-    elif segments[-1].point1 is segments[-1].point2:    # Second point: finish the first segment.
-        segments[-1].point2 = center
-    else:                                               # We're off and running: validate segments.
-        previous_point = segments[-1].point2
-        segments.append(Segment(previous_point, center))
+    add_point_to_segments(center, segments)
 
     return c
 
@@ -266,15 +267,7 @@ def next_(P, sibling):
 
         # Add new ...
         new_pathway.append((shape_id, resource_id))
-        if not new_segments:
-            pass
-        elif new_segments[-1].point1 is new_segments[-1].point2:
-            # Second point: finish the first segment.
-            new_segments[-1].point2 = center
-        else:
-            # We're off and running: validate segments.
-            previous_point = new_segments[-1].point2
-            new_segments.append(Segment(previous_point, center))
+        add_point_to_segments(center, new_segments)
 
     return sibling
 
