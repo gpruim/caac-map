@@ -115,8 +115,8 @@ class Problem(object):
                       ), *a, **kw)
 
 
-def solve(shapes, pathways, take_first=False):
-    problem = Problem(shapes, pathways, take_first)
+def solve(shapes, pathways, take_first=False, max_nodes=inf):
+    problem = Problem(shapes, pathways, take_first, max_nodes)
     try:
         backtrack(problem, root(problem))
     except FirstSolutionFound as exc:
