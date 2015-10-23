@@ -365,7 +365,11 @@ class MagnitudeMap(list):
     def assign_ids(self, pathways, take_first=True):
         """Given a pathways data structure, assign resources to shapes.
         """
-        solutions = pathways_solver.solve(self.shapes, pathways, take_first, max_nodes=1e6)
+        solutions = pathways_solver.solve( self.shapes
+                                         , pathways
+                                         , take_first
+                                         , relax_crossings_until=1e8
+                                          )
         self.assignments = dict(pathways_solver.flatten(random.choice(solutions)))
         return solutions
 

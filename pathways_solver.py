@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import itertools as it
-from operator import mul
+import random
 from functools import reduce
 from math import inf
+from operator import mul
 
 from geometry import Point, Segment
 
@@ -50,7 +51,8 @@ class Problem(object):
     depth = -1
     latest_pathway_assignment = None
 
-    def __init__(self, shapes, pathways, take_first=False, max_nodes=inf):
+    def __init__(self, shapes, pathways, take_first=False, relax_assignments_until=inf,
+            relax_crossings_until=inf):
         """Instantiate a pathways assignment problem.
 
         The problem definition is given in a shapes dictionary, mapping shape
@@ -71,7 +73,8 @@ class Problem(object):
         self.shapes = tuple(sorted(shapes))
         self.pathways = pathways
         self.take_first = take_first    # whether to raise after the first solution is found
-        self.max_nodes = max_nodes      # max number of nodes to touch before giving up
+        self.relax_assignments_until = relax_assignments_until
+        self.relax_crossings_until = relax_crossings_until
         self.resources = flatten(pathways)
         #XXX bad data! assert len(self.resources) == self.nlevels, (self.resources, self.nlevels, shapes, pathways)
 
@@ -121,8 +124,9 @@ class Problem(object):
                       ), *a, **kw)
 
 
-def solve(shapes, pathways, take_first=False, max_nodes=inf):
-    problem = Problem(shapes, pathways, take_first, max_nodes)
+def solve(shapes, pathways, take_first=False, relax_assignments_until=inf,
+        relax_crossings_until=inf):
+    problem = Problem(shapes, pathways, take_first, relax_assignments_until, relax_crossings_until)
     try:
         backtrack(problem, root(problem))
     except FirstSolutionFound as exc:
@@ -176,7 +180,8 @@ def reject(P, c):
         for earlier_segment in reversed(segments[:-2]):
             distance = last_segment.distance_from(earlier_segment)
             if distance <= 1:
-                return True
+                rejection_threshold = P.stats['ncalls'] / P.relax_crossings_until
+                return random.random() >= rejection_threshold
     return False
 
 def accept(P, c):
@@ -185,7 +190,7 @@ def accept(P, c):
         return True
 
     nassigned = len(flatten(c))
-    threshold = 1 - (P.stats['ncalls'] / P.max_nodes)
+    threshold = 1 - (P.stats['ncalls'] / P.relax_assignments_until)
     if nassigned / n >= threshold:
         print("Accepting a {} / {} = {:.0f}% solution after {} nodes."
               .format(nassigned, n, (nassigned/n) * 100, P.stats['ncalls']))
