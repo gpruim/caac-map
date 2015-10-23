@@ -1,3 +1,5 @@
 env
 output/.topics.json
 output/big.svg
+output/map.cache
+problem.log

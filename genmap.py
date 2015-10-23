@@ -3,12 +3,18 @@ import io
 import random
 import sys
 import traceback
-from math import ceil, sqrt
+import itertools as it
+import uuid
+from math import ceil, sqrt, factorial
+import pickle
+
+import pathways_solver
 
 
 class NoPossibleShapes(Exception): pass
 class TargetAreaTooSmall(Exception): pass
 class UnevenAlleys(Exception): pass
+class DoneAssigningIds(Exception): pass
 
 class TilePlacementError(Exception):
     def __init__(self, *a):
@@ -51,6 +57,7 @@ class MagnitudeMap(list):
         self.aspect_min = aspect_min
         self.area_threshold = 1  # lowered automatically as space shrinks
         self.shapes = {}
+        self.assignments = {}
 
         # Build the base map. It's surrounded by alleys.
         innerW = self.W - (self.alley_width * 2)
@@ -80,6 +87,9 @@ class MagnitudeMap(list):
         print('    <svg id="{}" x="{}" y="{}" '
               'xmlns="http://www.w3.org/2000/svg">'.format(id, offset_x, offset_y), file=fp)
         for uid, (x, y, (w, h)) in self.shapes.items():
+            uid = self.assignments.get(uid)
+            if uid is None:
+                continue
             print( '      <rect id="{}" x="{}px" y="{}px" width="{}px" height="{}px" />'
                    .format( uid
                           , x+self.half_alley
@@ -91,9 +101,6 @@ class MagnitudeMap(list):
                   )
         print('    </svg>', file=fp)
         return fp.getvalue()
-
-    def get_shape(self, uid):
-        return self.shapes[uid]
 
 
     def load(self, u):
@@ -126,7 +133,7 @@ class MagnitudeMap(list):
         return target_area
 
 
-    def add(self, uid, magnitude, shape_choice=None):
+    def add(self, magnitude, uid=None, shape_choice=None):
 
         # Find first empty cell.
         x, y = self.find_starting_corner()
@@ -149,6 +156,7 @@ class MagnitudeMap(list):
         self.draw_shape_at(shape, x, y)
 
         # Also save it for the SVG renderer to use.
+        uid = uid if uid else uuid.uuid4().hex
         self.shapes[uid] = (x, y, shape)
 
         # Decrement remaining_magnitudes.
@@ -354,6 +362,18 @@ class MagnitudeMap(list):
         return unsnapped
 
 
+    def assign_ids(self, pathways, take_first=True):
+        """Given a pathways data structure, assign resources to shapes.
+        """
+        solutions = pathways_solver.solve( self.shapes
+                                         , pathways
+                                         , take_first
+                                         , relax_crossings_until=1e8
+                                          )
+        self.assignments = dict(pathways_solver.flatten(random.choice(solutions)))
+        return solutions
+
+
 def fake_data(N):
     return [random.randint(1, 20) for i in range(N)]
 
@@ -368,12 +388,12 @@ def err(*a, **kw):
     print(file=sys.stderr, *a, **kw)
 
 
-def main(magnitudeses, charset, width, height, alley_width, building_min):
+def generate_map(topics, charset, width, height, alley_width, building_min):
     charset = charsets[charset]
     canvas_size = (width, height)
     street_width = alley_width * 10
     offset = street_width - alley_width
-    big = [(name, len(mags)) for name, mags in magnitudeses.items()]
+    big = [(topic_id, len(topic['subtopics'])) for topic_id, topic in topics.items()]
     big = fill_one( charset
                   , 'the whole thing'
                   , canvas_size
@@ -384,27 +404,31 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
                   , aspect_min=0.5
                    )
     print(big.to_svg(), file=open('output/big.svg', 'w+'))  # for debugging
+
     blocks = []
-    for name, magnitudes in magnitudeses.items():
+    for topic_id, topic in topics.items():
+        small = []
+        for subtopic in topic['subtopics'].values():
+            for resource in subtopic['resources'].values():
+                small.append((resource['id'], None))
         err()
-        err(name, '-' * (80 - len(name) - 1))
+        err(topic_id, '-' * (80 - len(topic_id) - 1))
         err()
-        x, y, (w, h) = big.get_shape(name)
+        x, y, (w, h) = big.shapes[topic_id]
         canvas_size = (w - offset, h - offset)
-        blocks.append((name, fill_one( charset
-                                     , name
-                                     , canvas_size
-                                     , magnitudes
-                                     , alley_width
-                                     , building_min
-                                     , aspect_min=0.2
-                                     , monkeys=True
-                                      )))
+        blocks.append((topic_id, fill_one( charset
+                                         , topic_id
+                                         , canvas_size
+                                         , small
+                                         , alley_width
+                                         , building_min
+                                         , aspect_min=0.2
+                                         , monkeys=True
+                                          )))
+    return big, blocks
 
 
-    # Generate a combined SVG.
-    # ========================
-
+def output_svg(big, blocks):
     half_W = big.W / 2
     half_H = big.H / 2
     rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
@@ -419,9 +443,12 @@ def main(magnitudeses, charset, width, height, alley_width, building_min):
     print('  <g transform="translate({} {}) rotate(45 {} {})">'
           .format(half_w - half_W, half_h - half_H, half_W, half_H), file=fp)
 
-    offset = street_width // 2
+    offset = big.alley_width // 2
     for uid, block in blocks:
         x, y, shape = big.shapes[uid]
+        subtopics = topics[uid]['subtopics'].values()
+        pathways = {s['id']: s['dag']['names'] for s in subtopics}
+        block.assign_ids(pathways)
         print(block.to_svg(uid, x + offset, y + offset), file=fp)
 
     print('  </g>', file=fp)
@@ -445,7 +472,7 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, 
                          alley_width=alley_width, building_min=building_min, **kw)
         try:
             for uid, magnitude in magnitudes:
-                m.add(uid, magnitude)
+                m.add(magnitude, uid=uid)
                 nplaced += 1
                 nremaining -= 1
         except:
@@ -474,13 +501,34 @@ def fill_one(charset, name, canvas_size, magnitudes, alley_width, building_min, 
     return m
 
 
+def dump(big, blocks):
+    pickle.dump([big] + blocks, open('output/map.cache', 'bw+'))
+
+
+def load():
+    big, blocks = None, None
+    try:
+        inp = pickle.load(open('output/map.cache', 'br'))
+        big = inp[0]
+        blocks = inp[1:]
+    except FileNotFoundError:
+        pass
+    return big, blocks
+
+
+def main(*a, **kw):
+    big, blocks = load()
+    if blocks is None:
+        big, blocks = generate_map(*a, **kw)
+        dump(big, blocks)
+    output_svg(big, blocks)
+
+
 if __name__ == '__main__':
-    import argparse
+    import argparse, json
 
     parser = argparse.ArgumentParser(description='Generate a CaaC map.')
-    parser.add_argument('input', help='the name of an input file in json format, or a number n to '
-                                      'seed the generation of {n/2 .. n} fake magnitudes each for '
-                                      'seven blocks')
+    parser.add_argument('input', help='the name of an input file in json format')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
@@ -490,20 +538,6 @@ if __name__ == '__main__':
                         help='the minimum width of the blocks')
 
     args = parser.parse_args()
-
-    # Convert `input` into `magnitudes`
-    if args.input.isdigit():
-        # XXX Does this still work?
-        magnitudeses = {name: list(enumerate(fake_data(int(args.input)))) for name in 'abcdefg'}
-    else:
-        import json
-        topics = json.load(open(args.input))
-        magnitudeses = {}
-        for topic_id, topic in topics.items():
-            magnitudeses[topic_id] = []
-            for subtopic_id, subtopic in topic['subtopics'].items():
-                for resource_id, resource in subtopic['resources'].items():
-                    magnitudeses[topic_id].append((resource_id, resource.get('duration', 1)))
+    topics = json.load(open(args.input))
     args.__dict__.pop('input')
-
-    main(magnitudeses, **args.__dict__)
+    main(topics, **args.__dict__)
