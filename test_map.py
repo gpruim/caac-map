@@ -1,5 +1,6 @@
 import genmap
 from pytest import raises
+from pathways_solver import flatten
 
 
 def test_map_can_draw_an_empty_canvas():
@@ -628,7 +629,7 @@ def test_ai_assigns_ids():
                         , {'art': [('b', 'deadbeef'), ('a', 'beeffeed')]}
                         , {'art': [('b', 'beeffeed'), ('a', 'deadbeef')]}
                          ]
-    assert m.assignments in solutions
+    assert tuple(sorted(m.assignments.items())) in [tuple(sorted(flatten(s))) for s in solutions]
 
 def test_ai_handles_two_simple_pathways():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=10, building_min=1)
@@ -650,7 +651,7 @@ def test_ai_handles_two_simple_pathways():
                         , {'art': [('b', 'x')], 'science': [('a', 'y')]}
                        #, {'art': [('b', 'y')], 'science': [('a', 'x')]}
                          ]
-    assert m.assignments in solutions
+    assert tuple(sorted(m.assignments.items())) in [tuple(sorted(flatten(s))) for s in solutions]
 
 def test_ai_handles_two_pathways_with_multiple_elements():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=84, building_min=1)
@@ -681,7 +682,7 @@ def test_ai_handles_two_pathways_with_multiple_elements():
                         , {'art': [('c', 'x'), ('a', 'y')], 'science': [('b', 'z')]}
                         , {'art': [('c', 'y'), ('a', 'x')], 'science': [('b', 'z')]}
                          ]
-    assert m.assignments in solutions
+    assert tuple(sorted(m.assignments.items())) in [tuple(sorted(flatten(s))) for s in solutions]
 
 def test_ai_doesnt_cross_pathways():
     m = genmap.MagnitudeMap(canvas_size=(16, 8), sum_of_magnitudes=84, building_min=1)

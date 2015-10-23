@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools as it
 from operator import mul
 from functools import reduce
+from math import inf
 
 from geometry import Point, Segment
 
@@ -41,7 +42,7 @@ class Problem(object):
     depth = -1
     latest_pathway_assignment = None
 
-    def __init__(self, shapes, pathways, take_first=False):
+    def __init__(self, shapes, pathways, take_first=False, max_nodes=inf):
         """Instantiate a pathways assignment problem.
 
         The problem definition is given in a shapes dictionary, mapping shape
@@ -61,7 +62,8 @@ class Problem(object):
         """
         self.shapes = tuple(sorted(shapes))
         self.pathways = pathways
-        self.take_first = take_first  # whether to raise after the first solution is found
+        self.take_first = take_first    # whether to raise after the first solution is found
+        self.max_nodes = max_nodes      # max number of nodes to touch before giving up
         self.resources = flatten(pathways)
         #XXX bad data! assert len(self.resources) == self.nlevels, (self.resources, self.nlevels, shapes, pathways)
 
@@ -171,11 +173,17 @@ def reject(P, c):
     return False
 
 def accept(P, c):
-    threshold = 1 - (P.stats['ncalls'] / 100000)
-    if P.depth / P.stats['nlevels'] > threshold:
-        print("Accepting a {:.0f}% solution after {} nodes."
-              .format((P.depth / P.stats['nlevels']) * 100, P.stats['ncalls']))
+    n = P.stats['nlevels']
+    if not n:
         return True
+
+    nassigned = len(flatten(c))
+    threshold = 1 - (P.stats['ncalls'] / P.max_nodes)
+    if nassigned / n >= threshold:
+        print("Accepting a {} / {} = {:.0f}% solution after {} nodes."
+              .format(nassigned, n, (nassigned/n) * 100, P.stats['ncalls']))
+        return True
+
     return False
 
 def output(P, c):
@@ -246,8 +254,8 @@ def next_(P, sibling):
             new_segments[-1].point2 = center
         else:
             new_segments.append(Segment(center, center))
-    else:                               # Different pathway, undo there and add here.
-        # Undo old ...
+    else:                               # Different pathway, remove there and add here.
+        # Remove old ...
         old_pathway.pop()
         if not old_segments:
             pass
@@ -256,7 +264,7 @@ def next_(P, sibling):
         else:
             old_segments.pop()
 
-        # Do new ...
+        # Add new ...
         new_pathway.append((shape_id, resource_id))
         if not new_segments:
             pass
@@ -286,6 +294,7 @@ def clean_up(P, c):
             P.segments[pathway_id].pop()
 
 def backtrack(P, c):
+    P.depth += 1
     P.stats['ncalls'] += 1
     if P.stats['ncalls'] % 10000 == 0:
         print('{depth} / {nlevels} | {ncalls} / {nnodes} | {nsolutions} / {npossible_solutions}'
@@ -293,12 +302,12 @@ def backtrack(P, c):
     if reject(P, c):
         P.stats['npossible_solutions'] -= count_possible_solutions(P.stats['nlevels'] - P.depth)
         P.stats['nnodes'] -= count_nodes(P.stats['nlevels'] - P.depth)
+        P.depth -= 1
         return
     if accept(P, c): output(P, c)
     s = first(P, c)
     while s:
-        P.depth += 1
         backtrack(P, s)
-        P.depth -= 1
         s = next_(P, s)
     clean_up(P, c)
+    P.depth -= 1
