@@ -38,12 +38,13 @@ import math
 
 
 class Point(object):
-    def __init__(self, x, y, z=0):
+    def __init__(self, x, y, z=0, name=None):
+        self.name = name or id(self)
         self.x = x
         self.y = y
         self.z = z
     def __str__(self):
-        return '<Point {}: {}, {}>'.format(id(self), self.x, self.y)
+        return '<Point {}: {}, {}>'.format(self.name, self.x, self.y)
     __repr__ = __str__
     def __add__(self, other):
         return Point(self.x + other.x, self.y+other.y, self.z+other.z)
@@ -75,10 +76,12 @@ class Segment(object):
         self.point2 = point2
 
     def __str__(self):
-        return ('<Segment {} ({}, {}) -> ({}, {})>'
+        return ('<Segment {} {}({}, {}) -> {}({}, {})>'
                 .format( id(self)
+                       , self.point1.name
                        , self.point1.x
                        , self.point1.y
+                       , self.point2.name
                        , self.point2.x
                        , self.point2.y
                         ))

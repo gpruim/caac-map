@@ -17,11 +17,11 @@ def flatten(pathways):
     return tuple(it.chain(*[p[1] for p in sorted(pathways.items())]))
 
 
-def get_center(shape):
+def get_center(name, shape):
     """Given a shape, return a Point for the center of it.
     """
     x,y, (w,h) = shape
-    return Point(x + w/2, y + h/2)
+    return Point(x + w/2, y + h/2, name=name)
 
 
 square = lambda x: x ** 2
@@ -208,7 +208,7 @@ def first(P, c):
     shape_id, resource_id = P.shapes[s], P.resources[r]
     pathway_id = P.latest_pathway_assignment = P.r2p[resource_id]
     c[pathway_id].append((shape_id, resource_id))
-    center = get_center(P.s2shape[shape_id])
+    center = get_center(resource_id, P.s2shape[shape_id])
     segments = P.segments[pathway_id]
 
     if not segments:                                    # First point: start a segment.
@@ -242,7 +242,7 @@ def next_(P, sibling):
     P.resource_pool.remove(r)
     P.pairs[-1] = (s,r)
     shape_id, resource_id = P.shapes[s], P.resources[r]
-    center = get_center(P.s2shape[shape_id])
+    center = get_center(resource_id, P.s2shape[shape_id])
 
     _new = P.latest_pathway_assignment = P.r2p[resource_id]
     new_pathway = sibling[_new]
