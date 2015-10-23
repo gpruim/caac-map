@@ -114,12 +114,10 @@ class Problem(object):
         msg, a = (a[0], a[1:]) if len(a) else ('', a)
         kw['file'] = self.logfile
         kw['flush'] = True
-        print('{:>2} {} {} {} {}'
+        print('{:>2} {} {}'
               .format( self.loglines
                      , '| '*self.depth
                      , msg.ljust(24-(2*self.depth))
-                     , len(self.siblings)
-                     , len(self.solutions)
                       ), *a, **kw)
 
 
@@ -176,7 +174,8 @@ def reject(P, c):
     if len(segments) > 2:
         last_segment = segments[-1]
         for earlier_segment in reversed(segments[:-2]):
-            if last_segment.distance_from(earlier_segment) <= 1:
+            distance = last_segment.distance_from(earlier_segment)
+            if distance <= 1:
                 return True
     return False
 
@@ -251,6 +250,7 @@ def next_(P, sibling):
 
     if new_pathway is old_pathway:      # Same pathway, overwrite.
         new_pathway[-1] = (shape_id, resource_id)
+        assert new_segments is old_segments
         if new_segments:
             new_segments[-1].point2 = center
         else:
@@ -290,7 +290,9 @@ def backtrack(P, c):
     P.depth += 1
     P.stats['ncalls'] += 1
     if P.stats['ncalls'] % 10000 == 0:
-        print('{depth} / {nlevels} | {ncalls} / {nnodes} | {nsolutions} / {npossible_solutions}'
+        print('{depth} / {nlevels} | '
+              '{ncalls} / {nnodes:.1e} | '
+              '{nsolutions} / {npossible_solutions:.1e}'
               .format(depth=P.depth, **P.stats))
     if reject(P, c):
         P.stats['npossible_solutions'] -= count_possible_solutions(P.stats['nlevels'] - P.depth)
