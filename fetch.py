@@ -9,12 +9,12 @@ The result of this script is a JSON file at ./output/topics.json.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import csv
+import io
 import json
 import os
 import re
 import shutil
 from collections import defaultdict
-from StringIO import StringIO
 from dag import DAG
 import xml.etree.ElementTree as ET
 
@@ -76,9 +76,8 @@ def fetch_resources_by_topic(worksheets):
         topic['subtopics'] = subtopics = defaultdict(lambda: defaultdict(dict))
 
         raw = _get(csvurl)
-        raw = raw.encode('utf8')  # the csv module can only use str
-        reader = csv.reader(StringIO(raw))
-        headers = reader.next()
+        reader = csv.reader(io.StringIO(raw))
+        headers = next(reader)
 
         for row in reader:
             resource = dict(zip(headers, row))
