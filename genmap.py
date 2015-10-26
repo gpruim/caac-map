@@ -371,6 +371,7 @@ class MagnitudeMap(list):
                                          , relax_crossings_until=1e8
                                           )
         self.assignments = dict(pathways_solver.flatten(random.choice(solutions)))
+        assert len(set(self.assignments.values())) == len(self.assignments)
         return solutions
 
 
