@@ -17,7 +17,6 @@ def flatten(pathways):
     """
     return tuple(it.chain(*[p[1] for p in sorted(pathways.items())]))
 
-
 def get_center(name, shape):
     """Given a shape, return a Point for the center of it.
     """
@@ -76,9 +75,10 @@ class Problem(object):
         self.relax_assignments_until = relax_assignments_until
         self.relax_crossings_until = relax_crossings_until
         self.resources = flatten(pathways)
-        #XXX bad data! assert len(self.resources) == self.nlevels, (self.resources, self.nlevels, shapes, pathways)
 
         nlevels = len(self.shapes)
+        assert len(self.resources) == nlevels, (self.resources, nlevels, shapes, pathways)
+
         self.stats = { 'ncalls': 0
                      , 'nlevels': nlevels
                      , 'nsolutions': 0
