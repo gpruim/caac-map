@@ -389,7 +389,7 @@ def err(*a, **kw):
     print(file=sys.stderr, *a, **kw)
 
 
-def generate_map(topics, charset, width, height, alley_width, building_min):
+def generate_map(topics, charset='utf8', width=1024, height=1024, alley_width=6, building_min=10):
     charset = charsets[charset]
     canvas_size = (width, height)
     street_width = alley_width * 10
@@ -429,15 +429,13 @@ def generate_map(topics, charset, width, height, alley_width, building_min):
     return big, blocks
 
 
-def output_svg(big, blocks):
+def output_svg(topics, fp, big, blocks):
     half_W = big.W / 2
     half_H = big.H / 2
     rotated_side = lambda x: int(ceil(sqrt((x ** 2) / 2)))
     w = h = rotated_side(big.W) + rotated_side(big.H)
     half_w = w / 2
     half_h = h / 2
-
-    fp = open('output/map.svg', 'w+')
 
     print('<svg width="{}px" height="{}px" '
           'xmlns="http://www.w3.org/2000/svg">'.format(w, h), file=fp)
@@ -517,19 +515,20 @@ def load():
     return big, blocks
 
 
-def main(*a, **kw):
+def main(topics, fp, *a, **kw):
     big, blocks = load()
     if blocks is None:
-        big, blocks = generate_map(*a, **kw)
+        big, blocks = generate_map(topics, *a, **kw)
         dump(big, blocks)
-    output_svg(big, blocks)
+    output_svg(topics, fp, big, blocks)
 
 
 if __name__ == '__main__':
     import argparse, json
 
     parser = argparse.ArgumentParser(description='Generate a CaaC map.')
-    parser.add_argument('input', help='the name of an input file in json format')
+    parser.add_argument('input', help='the name of an input file in json format, or - for stdin')
+    parser.add_argument('output', help='the name of an output file, or - for stdout')
     parser.add_argument('--charset', '-c', default='utf8', help='the character set to use',
                         choices=sorted(charsets.keys()))
     parser.add_argument('--width', '-W', default=128, type=int, help='the width of the canvas')
@@ -537,8 +536,9 @@ if __name__ == '__main__':
     parser.add_argument('--alley_width', '-a', default=6, type=int, help='the width of the alleys')
     parser.add_argument('--building_min', '-b', default=10, type=int,
                         help='the minimum width of the blocks')
-
     args = parser.parse_args()
-    topics = json.load(open(args.input))
+    topics = json.load(sys.stdin if args.input == '-' else open(args.input, 'r'))
+    fp = sys.stdout if args.output == '-' else open(args.output, 'w+')
     args.__dict__.pop('input')
-    main(topics, **args.__dict__)
+    args.__dict__.pop('output')
+    main(topics, fp, **args.__dict__)
