@@ -388,7 +388,7 @@ def err(*a, **kw):
     print(file=sys.stderr, *a, **kw)
 
 
-def generate_map(topics, charset, width, height, alley_width, building_min):
+def generate_map(topics, charset='utf8', width=1024, height=1024, alley_width=6, building_min=10):
     charset = charsets[charset]
     canvas_size = (width, height)
     street_width = alley_width * 10
