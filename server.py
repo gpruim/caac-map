@@ -18,13 +18,13 @@ class Job(threading.Thread):
     is_daemon = True
 
     def run(self):
-        postback_url, topics = self._args
+        callback_url, topics = self._args
         fp = io.StringIO()
         big, blocks = genmap.generate_map(topics, **self._kwargs)
         genmap.output_svg(topics, fp, big, blocks)
 
         fp.seek(0)
-        requests.post(postback_url, data=fp.read(), headers={'Content-Type': 'image/svg+xml'})
+        requests.post(callback_url, data=fp.read(), headers={'Content-Type': 'image/svg+xml'})
 
 
 # Flask App
@@ -44,15 +44,15 @@ def documentation():
 @app.route('/v1', methods=['POST'])
 def v1():
     kw = flask.request.get_json()
-    postback_url = kw.pop('postback_url')
+    callback_url = kw.pop('callback_url')
     topics = kw.pop('topics')
-    Job(args=(postback_url, topics), kwargs=kw).start()
+    Job(args=(callback_url, topics), kwargs=kw).start()
     return ''
 
 
 if DEV:
-    @app.route('/v1/postback-test/<filename>', methods=['POST'])
-    def postback_test(filename):
+    @app.route('/v1/callback-test/<filename>', methods=['POST'])
+    def callback_test(filename):
         open(filename, 'wb+').write(flask.request.get_data())
         return ''
 
