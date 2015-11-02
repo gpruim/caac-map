@@ -7,10 +7,4 @@ Command-line usage:
 (env) $ ./genmap.py output/topics.json output/map.svg -W 2048 -H 2048
 ```
 
-Web server usage:
-
-```bash
-(env) $ ./server.py &
-[...]
-(env) $ curl -X POST http://localhost:5000/v1 -d'@output/topics.json' -H'Content-Type: application/json' > output/map.svg
-```
+See http://caac-map.net/v1 for web server usage.
