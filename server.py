@@ -5,8 +5,7 @@ import genmap
 import threading
 
 import requests
-from flask import Flask, request
-
+import flask
 
 DEV = bool(os.environ.get('FLASK_DEBUG', False))
 
@@ -31,11 +30,20 @@ class Job(threading.Thread):
 # Flask App
 # =========
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
+
+@app.route('/')
+def redirect_to_v1():
+    return flask.redirect('/v1')
+
+_documentation = open('documentation.html').read()
+@app.route('/v1', methods=['GET'])
+def documentation():
+    return _documentation
 
 @app.route('/v1', methods=['POST'])
 def v1():
-    kw = request.get_json()
+    kw = flask.request.get_json()
     postback_url = kw.pop('postback_url')
     topics = kw.pop('topics')
     Job(args=(postback_url, topics), kwargs=kw).start()
@@ -45,10 +53,13 @@ def v1():
 if DEV:
     @app.route('/v1/postback-test/<filename>', methods=['POST'])
     def postback_test(filename):
-        open(filename, 'wb+').write(request.get_data())
+        open(filename, 'wb+').write(flask.request.get_data())
         return ''
 
 
 if __name__ == '__main__':
     app.debug = DEV
-    app.run()
+    kw = dict()
+    if app.debug:
+        kw['extra_files'] = ['documentation.html']
+    app.run(**kw)

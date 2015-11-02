@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <title>CaaC Map</title>
+        <link rel="icon" href="http://cityasacampus.org/img/favicon.ico" type="image/x-icon" />
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            #body {
+                width: 500px;
+                margin: 40px auto;
+            }
+            h1 {
+                margin: 20px 0 10px;
+            }
+            h2 {
+                margin: 20px 0 10px;
+            }
+            pre {
+                margin: 10px 0;
+            }
+            p {
+                line-height: 150%;
+            }
+        </style>
+    </head>
+    <body><div id="body">
+        <h1>CaaC Map</h1>
+        <p>You've found the <a href="http://cityasacampus.org/">City as a Campus</a> (CaaC) Map Generator!</p>
+
+        <h2>Usage</h2>
+
+        <p><code>POST</code> a job description to <code>/v1</code> with a
+        <code>Content-Type</code> of <code>application/json</code> and this format:</p>
+
+        <pre><code class="json">{ "callback_url": "http://requestb.in/fa1afe1"
+, "width": "2048"
+, "height": "2048"
+, "topics": { "deadbeef": { "id": "deadbeef"
+                          , "subtopics": { "fa1afe1": { "id": "fa1afe1"
+                                                      , "topic_id": "deadbeef"
+                                                      , "dag": { "names": ["fadedfad"]
+                                                               , "vertices": [{"incomingNames": "feeddeaf"}]
+                                                                }
+                                                      , "resources": { "fadedfad": { "id": "fadedfad"
+                                                                                   , "topic_id": "deadbeef"
+                                                                                   , "subtopic_id": "fa1afe1"
+                                                                                   , "etc": "stuff"
+                                                                                    }
+                                                                      }
+                                                       }
+         }</code></pre>
+
+        <p>We'll generate an SVG and <code>POST</code> it to the
+        <code>callback_url</code> you specified.</p>
+
+        <a href="https://github.com/saxifrage/caac-map/"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/agate.min.css">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+    </div></body>
+</html>
