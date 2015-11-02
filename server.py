@@ -32,13 +32,6 @@ class Job(threading.Thread):
 
 app = flask.Flask(__name__)
 
-_favicon = open('favicon.ico', 'rb').read()
-@app.route('/favicon.ico')
-def favicon():
-    response = flask.Response(_favicon)
-    response.headers['Content-Type'] = 'image/x-icon'
-    return response
-
 @app.route('/')
 def redirect_to_v1():
     return flask.redirect('/v1')
